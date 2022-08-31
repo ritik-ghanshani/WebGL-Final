@@ -12,6 +12,11 @@ const LIGHTGRAY = vec4(0.9, 0.9, 0.9, 1);
 var canvas;
 var gl;
 
+var sun;
+var sunAngle;
+var flash;
+
+
 var cam = new Camera(vec3(0, 0, 0), vec3(0, 1, 0));
 // var light1 = new Light(vec3(0, 0, 0), vec3(0, 1, -1), vec4(0.4, 0.4, 0.4, 1.0), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), 0, 0, 1);
 
@@ -35,6 +40,19 @@ window.onload = function init() {
 	gl.clearColor(...LIGHTGRAY);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+	sunAngle = 0;
+
+	sun = new Light();
+	sun.setLocation(10, 0, 0, 1);
+	sun.setAmbient(1, 1, 1);
+	flash = new Light();
+	flash.setLocation(0, 5, 5);
+	flash.setDirection(0, -Math.sqrt(2) / 2, -Math.sqrt(2) / 2);
+	flash.setAmbient(0.2, 0.2, 0.2);
+	flash.setSpecular(1, 1, 1);
+	flash.setDiffuse(1, 0, 1);
+	flash.turnOn();
+
 	skybox = new SkyBox(vshader_skybox, fshader_skybox);
 	plane = new Plane(1, vshader, fshader);
 	cube = new Cube(vshader, fshader);
@@ -45,16 +63,21 @@ function render() {
 	setTimeout(() => {
 		requestAnimationFrame(render);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+		sunAngle += 0.1;
+		sun = new Light();
+		sun.setLocation(10 * Math.cos(sunAngle), 0, 10 * Math.sin(sunAngle), 1);
+
 		gl.disable(gl.DEPTH_TEST)
-		skybox.draw();
+		// skybox.draw();
 		gl.enable(gl.DEPTH_TEST);
 		plane.draw();
 		cube.draw();
-	}, 100);  //10fps
+	}, 10);  //10fps
 }
 
 document.addEventListener('keydown', event => {
-	console.log(event.code)
+	// console.log(event.code)
 	switch (event.code) {
 		case 'KeyX':
 			if (event.shiftKey) {
@@ -89,5 +112,13 @@ document.addEventListener('keydown', event => {
 		case 'KeyD':
 			cam.moveU(-1);
 			break;
+        case 'Space':
+            if (flash.on) {
+                flash.turnOff();
+            } else {
+                flash.turnOn();
+            }
+            console.log(flash.on);
+            break;
 	}
 })
