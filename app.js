@@ -11,18 +11,16 @@ const LIGHTGRAY = vec4(0.9, 0.9, 0.9, 1);
 
 var canvas;
 var gl;
-
+var shadowFrameBuffer;
+var shadowRenderBuffer;
 var cam = new Camera(vec3(0, 0, 0), vec3(0, 1, 0));
-// var light1 = new Light(vec3(0, 0, 0), vec3(0, 1, -1), vec4(0.4, 0.4, 0.4, 1.0), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), 0, 0, 1);
+var light1 = new Light(vec3(0, 0, 0), vec3(0, 1, -1), vec4(0.4, 0.4, 0.4, 1.0), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), 0, 0, 1);
 
-var plane;
-var cube;
-var skybox;
-
-const vshader = "vshader.glsl";
-const vshader_skybox = "vshader_skybox.glsl";
-const fshader = "fshader.glsl";
-const fshader_skybox = "fshader_skybox.glsl";
+// var plane;
+// var cube;
+var objects = [];
+const vshader = "./vshader/vshader.glsl";
+const fshader = "./fshader/fshader.glsl";
 
 window.onload = function init() {
 	canvas = document.getElementById("gl-canvas");
@@ -35,22 +33,61 @@ window.onload = function init() {
 	gl.clearColor(...LIGHTGRAY);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	skybox = new SkyBox(vshader_skybox, fshader_skybox);
-	plane = new Plane(1, vshader, fshader);
-	cube = new Cube(vshader, fshader);
+	////////////////////////////////////////////////////////////////////
+	// 						SHADOW MAPPING
+	/////////////////////////////////////////////////////////////////// 
+	{
+		let vpWidth = 512, vpHeight = 512;
+		shadowFrameBuffer = gl.createFramebuffer();
+		shadowFrameBuffer.width = vpWidth;
+		shadowFrameBuffer.height = vpHeight;
+		gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFrameBuffer);
+
+		shadowRenderBuffer = gl.createRenderbuffer();
+		gl.bindRenderbuffer(gl.RENDERBUFFER, shadowRenderBuffer);
+		gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, vpWidth, vpHeight);
+		gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadowRenderBuffer);
+
+		light1.depthTexture = gl.createTexture();
+		gl.bindTexture(gl.TEXTURE_2D, light1.depthTexture);
+		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, vpWidth, vpHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+		gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+		gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+		gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null); //restore to window frame/depth buffer
+		gl.bindRenderbuffer(gl.RENDERBUFFER, null)
+	}
+	////////////////////////////////////////////////////////////////////
+	// 						END SHADOW MAPPING
+	/////////////////////////////////////////////////////////////////// 
+
+	objects.push(new Plane(1, vshader, fshader));
+	objects.push(new Cube(vshader, fshader));
 	render();
 };
+
+function renderShadowMaps() {
+	gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFrameBuffer);
+	gl.bindRenderbuffer(gl.RENDERBUFFER, shadowRenderBuffer);
+	gl.activeTexture(gl.TEXTURE0);
+	gl.bindTexture(gl.TEXTURE_2D, light.depthTexture);
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, light.depthTexture, 0);
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+	for (var i = 1; i < objects.length; i++)
+		objects[i].drawToShadowMap();
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null); //return to screens buffers
+	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+}
 
 function render() {
 	setTimeout(() => {
 		requestAnimationFrame(render);
+		// renderShadowMaps();
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		gl.disable(gl.DEPTH_TEST)
-		skybox.draw();
-		gl.enable(gl.DEPTH_TEST);
-		plane.draw();
-		cube.draw();
-	}, 100);  //10fps
+		objects.forEach((obj) => obj.draw());
+	}, 50);  //10fps
 }
 
 document.addEventListener('keydown', event => {
