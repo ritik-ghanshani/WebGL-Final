@@ -21,19 +21,31 @@ var sun;
 var sunAngle;
 var flash;
 var switchObj;
-
-
-
+var sphere;
+var ironMan;
+var sphere_size = 1;
+var theta = 0;
+var lights = [];
+var robotObj;
+var switchObj2;
 var selected_cam;
 
 var worldCam;
 
-var roboCam;
-
+// var roboCam;
+// lights.push(light1);
 var objects = [];
+var obj = [];
+const vshader = "./vshader/vshader_plane.glsl";
+const fshader = "./fshader/fshader_plane.glsl";
 
 window.onload = async function init() {
+	canvas = document.getElementById("gl-canvas");
+	canvas.addEventListener("mousedown", mousedownHandler);
 
+	Array.prototype.sample = function () {
+		return this[Math.floor(Math.random() * this.length)];
+	}
 
 	window.addEventListener("mousedown", mousedownHandler);
 
@@ -61,37 +73,29 @@ window.onload = async function init() {
 	gl.clearColor(...BLACK);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+	sunAngle = 0;
 
+	sun = new Light();
+	sun.setLocation(10, 0, 0, 1);
+	sun.setAmbient(1, 1, 1);
+	flash = new Light();
+	flash.setLocation(0, 5, 5);
+	flash.setDirection(0, -Math.sqrt(2) / 2, -Math.sqrt(2) / 2);
+	flash.setAmbient(0.2, 0.2, 0.2);
+	flash.setSpecular(1, 1, 1);
+	flash.setDiffuse(1, 0, 1);
+	flash.turnOn();
+	flash.type = 1;
 
-	////////////////////////////////////////////////////////////////////
-	// 						SHADOW MAPPING
-	///////////////////////////////////////////////////////////////////
-	// {
-	// 	let vpWidth = 512, vpHeight = 512;
-	// 	shadowFrameBuffer = gl.createFramebuffer();
-	// 	shadowFrameBuffer.width = vpWidth;
-	// 	shadowFrameBuffer.height = vpHeight;
-	// 	gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFrameBuffer);
+	lights.push(sun);
+	lights.push(flash);
 
-	// 	shadowRenderBuffer = gl.createRenderbuffer();
-	// 	gl.bindRenderbuffer(gl.RENDERBUFFER, shadowRenderBuffer);
-	// 	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, vpWidth, vpHeight);
-	// 	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadowRenderBuffer);
-
-	// 	light1.depthTexture = gl.createTexture();
-	// 	gl.bindTexture(gl.TEXTURE_2D, light1.depthTexture);
-	// 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, vpWidth, vpHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-	// 	gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-	// 	gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-	// 	gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-	// 	gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-	// 	gl.bindFramebuffer(gl.FRAMEBUFFER, null); //restore to window frame/depth buffer
-	// 	gl.bindRenderbuffer(gl.RENDERBUFFER, null)
-	// }
-	////////////////////////////////////////////////////////////////////
-	// 						END SHADOW MAPPING
-	///////////////////////////////////////////////////////////////////
+	project_matrix = perspective(
+		45,
+		canvas.width / canvas.height,
+		0.1,
+		100
+	);
 
 	sunAngle = 0;
 
@@ -107,19 +111,30 @@ window.onload = async function init() {
 	flash.setDiffuse(1, 0, 1);
 	flash.turnOn();
 
-	objects.push(new Plane());
+	plane = new Plane();
+	objects.push(plane);
+	obj.push(plane.constructor.name);
 
 	cube = new Cube();
 	cube.setLocation(0, 5, 0);
 	cube.setSize(0.4, 0.4, 0.4);
 
-	objects.push(cube);
+	sphere = new Sphere();
+	objects.push(sphere);
+	obj.push(sphere.constructor.name);
 
-	switchObj = new Switch(await loadOBJ("models/switch.obj"));
+	objects.push(cube);
+	obj.push(cube.constructor.name);
+
+	switchObj2 = await loadOBJ("models/switch.obj")
+	switchObj = new Switch(switchObj2);
 	switchObj.setLocation(0.5 + 0.5 * 4, 0.05 * 4, 0 + 0.5 * 8.5);
 	switchObj.setSize(0.008, 0.008, 0.008);
+	objects.push(switchObj);
+	obj.push(switchObj.constructor.name);
 
-	ironMan = new Robot(await loadOBJ("models/ironman.obj"));
+	robotObj = await loadOBJ("models/ironman.obj");
+	ironMan = new Robot(robotObj);
 	ironMan.setLocation(0.5 + 0.5, 0.05 * 4, 0);
 	ironMan.setSize(0.03, 0.03, 0.03);
 
@@ -135,27 +150,47 @@ window.onload = async function init() {
 	selected_cam = worldCam;
 	objects.push(switchObj);
 	objects.push(ironMan);
+	obj.push(ironMan.constructor.name);
 
 	render();
 };
-
-function renderShadowMaps() {
-	gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFrameBuffer);
-	gl.bindRenderbuffer(gl.RENDERBUFFER, shadowRenderBuffer);
-	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, light.depthTexture);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, light.depthTexture, 0);
-	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-	for (var i = 1; i < objects.length; i++)
-		objects[i].drawToShadowMap();
-	gl.bindFramebuffer(gl.FRAMEBUFFER, null); //return to screens buffers
-	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-}
 
 function render() {
 	setTimeout(() => {
 		requestAnimationFrame(render);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+		if (switchObj.picked) {
+			let sample = obj.sample();
+			let a;
+			switch (sample) {
+				case "Plane":
+					a = new Plane();
+					break;
+				case "Sphere":
+					a = new Sphere();
+					break;
+				case "Cube":
+					a = new Cube();
+					break;
+				case "Robot":
+					a = new Robot(robotObj);
+					break;
+				case "Switch":
+					a = new Switch(switchObj2);
+					break;
+			}
+			a.setLocation(getRandomIntInclusive(-5, 5), getRandomIntInclusive(-5, 5), getRandomIntInclusive(-5, 5));
+			a.setSize(Math.random(), Math.random(), Math.random());
+			objects.push(a);
+			switchObj.picked = false;
+		}
+		theta += 0.01;
+		objects
+			.filter(o => o.constructor.name === "Sphere")
+			.forEach(s => {
+				let a = sphere_size + 5 * Math.sin(theta);
+				s.setSize(a, a, a);
+			})
 		if (selected_cam.constructor.name === "RoboCam") {
 			var cameraRad = ironMan.yrot * ((2 * Math.PI) / 360);
 			selected_cam.setPosition(
@@ -252,7 +287,12 @@ function mousedownHandler(event) {
 }
 
 async function loadOBJ(file) {
-	var response = await fetch(file);
-	var text = await response.text();
+	const response = await fetch(file);
+	const text = await response.text();
 	return text;
+}
+function getRandomIntInclusive(min, max) {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	return Math.floor(Math.random() * (max - min + 1) + min);
 }

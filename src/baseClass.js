@@ -7,6 +7,7 @@ class BaseClass {
         this.zrot = 0;
         this.time = 0.0;
         this.texture = -1;
+        this.useShadowMap = true;
         this.uTextureUnitShader = -1;
         this.pickable = true;
         this.picked = false;
@@ -18,9 +19,7 @@ class BaseClass {
         this.rotationYMatrix = mat4();
         this.rotationXMatrix = mat4();
 
-
-        this.program = initShaders(gl, "/vshader/vshader_plane.glsl", "/fshader/fshader_plane.glsl");
-
+        this.program = initShaders(gl, vshader, fshader);
         var image = new Image();
 
         image.onload = () => {
@@ -206,17 +205,6 @@ class BaseClass {
         }
     }
 
-    setLocation(x, y, z) {
-        this.location = vec3(x, y, z);
-        this.locationMatrix = translate(x, y, z);
-        this.updateModelMatrix();
-    }
-
-    setSize(x, y, z) {
-        this.sizeMatrix = scale(x, y, z);
-        this.updateModelMatrix();
-    }
-
     updateModelMatrix() {
         var rotationMatrix = mult(
             this.rotationZMatrix,
@@ -230,5 +218,13 @@ class BaseClass {
     getLocation() {
         return this.location;
     }
-
+    setLocation(x, y, z) {
+        this.location = vec3(x, y, z);
+        this.locationMatrix = translate(x, y, z);
+        this.updateModelMatrix();
+    }
+    setSize(x, y, z) {
+        this.sizeMatrix = scale(x, y, z);
+        this.updateModelMatrix();
+    }
 }

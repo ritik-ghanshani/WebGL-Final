@@ -25,7 +25,8 @@ uniform int lightType2;
 
 
 uniform mat4 modelMatrix, cameraMatrix, projectionMatrix;
-
+uniform mat4 lightCameraMatrix;
+uniform mat4 lightProjMatrix;
 
 uniform vec4 matAmbient, matDiffuse, matSpecular;
 uniform float matAlpha;
