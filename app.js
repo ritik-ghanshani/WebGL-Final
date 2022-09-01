@@ -15,6 +15,7 @@ var shadowFrameBuffer;
 var shadowRenderBuffer;
 
 var project_matrix;
+var robo_projection_matrix;
 
 var sun;
 var sunAngle;
@@ -25,8 +26,12 @@ var ironMan;
 var sphere_size;
 var theta = 0;
 var lights = [];
-var cam = new Camera(vec3(0, 0, 0), vec3(0, 1, 0));
-// var light1 = new Light(vec3(0, 0, 0), vec3(0, 1, -1), vec4(0.4, 0.4, 0.4, 1.0), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), 0, 0, 1);
+
+var selected_cam;
+
+var worldCam;
+
+// var roboCam;
 // lights.push(light1);
 var objects = [];
 var obj = [];
@@ -45,6 +50,23 @@ window.onload = async function init() {
 		return this[Math.floor(Math.random() * this.length)];
 	}
 
+	window.addEventListener("mousedown", mousedownHandler);
+
+	canvas = document.getElementById("gl-canvas");
+	project_matrix = perspective(
+		45,
+		canvas.width / canvas.height,
+		0.1,
+		100
+	);
+	robo_projection_matrix = perspective(
+		90,
+		canvas.width / canvas.height,
+		0.1,
+		100
+	);
+	worldCam = new Camera(vec3(0, 0, 0), vec3(0, 1, 0), project_matrix);
+	roboCam = new RoboCam(vec3(0, 0, 0), vec3(0, 1, 0), robo_projection_matrix);
 	gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true });
 	if (!gl) { alert("WebGL 2.0 isn't available"); }
 	gl.enable(gl.DEPTH_TEST);
@@ -147,6 +169,18 @@ window.onload = async function init() {
 	ironMan = new Robot(await loadOBJ("models/ironman.obj"));
 	ironMan.setLocation(0.5 + 0.5, 0.05 * 4, 0);
 	ironMan.setSize(0.03, 0.03, 0.03);
+
+	var cameraRad = ironMan.yrot * ((2 * Math.PI) / 360);
+	roboCam.setPosition(
+		...add(
+			ironMan.getLocation(),
+			vec3(-1 * Math.sin(cameraRad), 1, -1 * Math.cos(cameraRad))
+		)
+	);
+	roboCam.setAt(...add(ironMan.getLocation(), vec3(0, 1, 0)));
+
+	selected_cam = worldCam;
+	objects.push(switchObj);
 	objects.push(ironMan);
 	obj.push(ironMan);
 
@@ -186,52 +220,66 @@ function render() {
 				let a = sphere_size + 5 * Math.sin(theta);
 				s.setSize(a, a, a);
 			})
-		objects.forEach((obj) => obj.draw());
-
-		// sunAngle += 0.1;
-		// sun = new Light();
-		// sun.setLocation(10 * Math.cos(sunAngle), 0, 10 * Math.sin(sunAngle), 1);
-		// sun.turnOn();
-
-
+		if (selected_cam.constructor.name === "RoboCam") {
+			var cameraRad = ironMan.yrot * ((2 * Math.PI) / 360);
+			selected_cam.setPosition(
+				...add(
+					ironMan.getLocation(),
+					vec3(
+						-1 * Math.sin(cameraRad),
+						4.3,
+						0.39 * Math.cos(cameraRad)
+					)
+				)
+			);
+			selected_cam.setAt(...add(ironMan.getLocation(), vec3(20, -12, 15)));
+			selected_cam.updateCamMatrix();
+		}
+		var cMat = selected_cam.getCameraMatrix();
+		var pMat = selected_cam.getProjectionMatrix();
+		objects.forEach((obj) => obj.draw(cMat, pMat));
 	}, 50);  //10fps
 }
 
 document.addEventListener('keydown', event => {
 	// console.log(event.code)
 	switch (event.code) {
+		case 'KeyQ':
+			selected_cam = (selected_cam === worldCam) ? roboCam : worldCam;
+			console.log(selected_cam.constructor.name)
+			break;
 		case 'KeyX':
 			if (event.shiftKey) {
-				cam.pitch(-5);
+				selected_cam.pitch(-5);
 			} else {
-				cam.pitch(5);
+				selected_cam.pitch(5);
 			}
 			break;
 		case 'KeyC':
 			if (event.shiftKey) {
-				cam.yaw(-5);
+				selected_cam.yaw(-5);
 			} else {
-				cam.yaw(5);
+				selected_cam.yaw(5);
 			}
 			break;
 		case 'KeyZ':
 			if (event.shiftKey) {
-				cam.roll(-5);
+				selected_cam.roll(-5);
 			} else {
-				cam.roll(5);
+				selected_cam.roll(5);
 			}
 			break;
 		case 'KeyA':
-			cam.moveU(1);
+			selected_cam.moveU(1);
 			break;
 		case 'KeyW':
-			cam.moveN(1);
+			selected_cam.moveN(1);
 			break;
 		case 'KeyS':
-			cam.moveN(-1);
+			selected_cam.moveN(-1);
 			break;
 		case 'KeyD':
-			cam.moveU(-1);
+			selected_cam.moveU(-1);
 			break;
 		case 'Space':
 			if (flash.on) {
@@ -239,7 +287,6 @@ document.addEventListener('keydown', event => {
 			} else {
 				flash.turnOn();
 			}
-			console.log(flash.on);
 			break;
 	}
 })
@@ -252,7 +299,7 @@ function mousedownHandler(event) {
 	var pcam = mult(inverse(project_matrix), pfront);
 	pcam[2] = -1;
 	pcam[3] = 0;
-	var pworld = mult(inverse(cam.camMatrix), pcam);
+	var pworld = mult(inverse(worldCam.getCameraMatrix()), pcam);
 	var point = normalize(vec3(pworld[0], pworld[1], pworld[2]));
 	var min_t = null;
 	var min_object = null;

@@ -116,7 +116,7 @@ class SkyBox {
     draw() {
         if (this.imageLoadCounter != 6) return
         let origin = vec3(0, 0, 0);
-        var c = lookAt(origin, subtract(origin, cam.n), cam.v);
+        var c = lookAt(origin, subtract(origin, selected_cam.n), selected_cam.v);
         // console.log(c);
         gl.useProgram(this.program);
 

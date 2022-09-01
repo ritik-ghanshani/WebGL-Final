@@ -101,7 +101,7 @@ class BaseClass {
         this.matAlpha = gl.getUniformLocation(this.program, "matAlpha");
     }
 
-    draw() {
+    draw(camera_matrix, project_matrix) {
         if (this.texture === -1) return
 
         gl.useProgram(this.program);
@@ -123,8 +123,8 @@ class BaseClass {
 
         // set the uniform variables
         gl.uniformMatrix4fv(this.modelMatrixID, false, flatten(this.modelMatrix));
-        gl.uniformMatrix4fv(this.projMatrixID, false, flatten(this.projMatrix));
-        gl.uniformMatrix4fv(this.camMatrixID, false, flatten(cam.camMatrix));
+        gl.uniformMatrix4fv(this.projMatrixID, false, flatten(project_matrix));
+        gl.uniformMatrix4fv(this.camMatrixID, false, flatten(camera_matrix));
 
         gl.uniform4fv(this.lightPosition1, sun.position);
         gl.uniform4fv(this.lightDiffuse1, sun.diffuse);
@@ -187,7 +187,7 @@ class BaseClass {
         if (dot(ray, N) === 0) {
             return false;
         }
-        var Q = cam.getPosition();
+        var Q = selected_cam.getPosition();
         var alpha = -((dot(Q, N) + dot(mult(-1, ve), N)) / dot(ray, N));
         if (alpha < 0) {
             return false;
@@ -237,6 +237,9 @@ class BaseClass {
             this.locationMatrix,
             mult(this.sizeMatrix, rotationMatrix)
         );
+    }
+    getLocation() {
+        return this.location;
     }
     setLocation(x, y, z) {
         this.location = vec3(x, y, z);
