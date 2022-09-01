@@ -34,6 +34,9 @@ class Cube {
         this.uTextureUnitShader = -1;
         this.findNormals(vertices, indices);
 
+        this.pickable = true;
+        this.picked = false;
+
         // Load shaders and initialize attribute buffers
         this.program = initShaders(gl, "/vshader/vshader_plane.glsl", "/fshader/fshader_plane.glsl");
 
@@ -203,5 +206,48 @@ class Cube {
         gl.disableVertexAttribArray(this.aTextureCoord);
         // gl.disableVertexAttribArray(this.aColor);
         gl.disableVertexAttribArray(this.aNormal);
+    }
+
+    testCollision(ray) {
+        this.minT = null;
+        if (this.pickable) {
+            for (var i = 0; i < this.numVertices; i += 3) {
+                var e = mult(this.modelMatrix, this.vPositions[i]);
+                var f = mult(this.modelMatrix, this.vPositions[i + 1]);
+                var g = mult(this.modelMatrix, this.vPositions[i + 2]);
+                this.testCollisionTriangle(ray, e, f, g);
+            }
+        }
+        return this.minT;
+    }
+    onPick() {
+        this.picked = true;
+    }
+    testCollisionTriangle(v, e, f, g) {
+        var ve = vec3(e[0], e[1], e[2]);
+        var vf = vec3(f[0], f[1], f[2]);
+        var vg = vec3(g[0], g[1], g[2]);
+        var ray = vec3(v[0], v[1], v[2]);
+        var N = cross(subtract(vf, ve), subtract(vg, ve));
+        if (dot(ray, N) === 0) {
+            return false;
+        }
+        var Q = cam.getPosition();
+        var alpha = -((dot(Q, N) + dot(mult(-1, ve), N)) / dot(ray, N));
+        if (alpha < 0) {
+            return false;
+        }
+        var P = add(Q, mult(alpha, ray));
+        var d1 = dot(N, cross(subtract(vf, ve), subtract(P, ve)));
+        var d2 = dot(N, cross(subtract(vg, vf), subtract(P, vf)));
+        var d3 = dot(N, cross(subtract(ve, vg), subtract(P, vg)));
+        if (d1 >= 0 && d2 >= 0 && d3 >= 0) {
+            if (this.minT === null || alpha < this.minT) {
+                this.minT = alpha;
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 }
