@@ -1,11 +1,11 @@
 class RoboCam extends Camera {
-    constructor() {
-        super();
+    constructor(at, up, project_matrix) {
+        super(at, up, project_matrix);
+        this.eye = vec3(10, 10, 10);
         this.cameraHeight = 0;
         this.cameraRadius = 2;
-        this.eye = vec3(0, 2, 2);
-        this.at = vec3(0, 0, 0);
-        this.up = vec3(0, 1, 0);
+        this.updateCamMatrix();
+
     }
 
     getPosition() {
@@ -14,14 +14,6 @@ class RoboCam extends Camera {
 
     getDirection() {
         return subtract(this.at, this.eye);
-    }
-
-    getCameraMatrix() {
-        return this.camera_matrix;
-    }
-
-    getProjectionMatrix() {
-        return this.projection_matrix;
     }
 
     setPosition(x, y, z) {

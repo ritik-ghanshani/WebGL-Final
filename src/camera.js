@@ -1,12 +1,15 @@
 class Camera {
-    constructor() {
-        this.camMatrix = mat4();
-
+    constructor(at, up, project_matrix) {
+        this.camera_matrix = mat4();
+        this.at = at;
+        this.up = up;
         this.eye = vec3(0, 1, 1);
         this.u = vec3(1, 0, 0);
         this.v = vec3(0, 1, 0);
         this.n = vec3(0, 0, 1);
         this.updateCamMatrix();
+        this.project_matrix = project_matrix;
+
     }
 
     getPosition() {
@@ -49,6 +52,13 @@ class Camera {
         this.updateCamMatrix();
     }
     updateCamMatrix() {
-        this.camMatrix = lookAt(this.eye, subtract(this.eye, this.n), this.v);
+        this.camera_matrix = lookAt(this.eye, subtract(this.eye, this.n), this.v);
+    }
+    getCameraMatrix() {
+        return this.camera_matrix;
+    }
+
+    getProjectionMatrix() {
+        return this.project_matrix;
     }
 }
