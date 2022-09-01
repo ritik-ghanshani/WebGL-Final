@@ -1,16 +1,15 @@
-class OBJ {
-    constructor(text, texture_path) {
+class BaseClass {
+
+    constructor(texture) {
         this.location = vec3(10, 0, 0);
         this.xrot = 0;
         this.yrot = 0;
         this.zrot = 0;
         this.time = 0.0;
+        this.texture = -1;
+        this.uTextureUnitShader = -1;
         this.pickable = true;
         this.picked = false;
-        this.program = initShaders(gl, "/vshader/vshader_plane.glsl",
-            "/fshader/fshader_plane.glsl"
-        );
-        gl.useProgram(this.program);
 
         this.modelMatrix = mat4();
         this.sizeMatrix = mat4();
@@ -19,35 +18,26 @@ class OBJ {
         this.rotationYMatrix = mat4();
         this.rotationXMatrix = mat4();
 
-        var TEXTURE = new Image();
-        this.texture = gl.createTexture();
-        var self = this;
-        TEXTURE.onload = function () {
-            self.texture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, self.texture);
-            gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,this.width,this.height,0,gl.RGB,gl.UNSIGNED_BYTE,TEXTURE);
 
+        this.program = initShaders(gl, "/vshader/vshader_plane.glsl", "/fshader/fshader_plane.glsl");
+
+        var image = new Image();
+
+        image.onload = () => {
+            this.texture = gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D, this.texture);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, image.width, image.height, 0, gl.RGB, gl.UNSIGNED_BYTE, image);
             gl.generateMipmap(gl.TEXTURE_2D);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST_MIPMAP_NEAREST);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.bindTexture(gl.TEXTURE_2D, null);
-        };
-        TEXTURE.src = texture_path;
 
-
+        }
         this.uTextureUnitShader = gl.getUniformLocation(this.program, "uTextureUnit");
 
-        this.vPositions = [];
-        this.vNormals = [];
-        this.vTexCoords = [];
-        this.parseOBJ(text);
-        this.numVertices = this.vPositions.length;
-
-        console.log(this.vPositions);
-        console.log(this.vNormals);
-        console.log(this.vTexCoords);
-
-        // Load the data into the GPU
+        image.src = texture;
+    }
+  
+    initBuffers() {   
         this.vID = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vID);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(this.vPositions), gl.STATIC_DRAW);
@@ -64,7 +54,9 @@ class OBJ {
         this.nID = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.nID);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(this.vNormals), gl.STATIC_DRAW);
-        
+
+        // Get the location of the attribute and uniform variables from the shader program.
+        // this.aColor = gl.getAttribLocation(this.program, "aColor");
         this.aPosition = gl.getAttribLocation(this.program, "aPosition");
         this.aNormal = gl.getAttribLocation(this.program, "aNormal");
         this.aTextureCoord = gl.getAttribLocation(this.program, "aTextureCoord");
@@ -107,104 +99,6 @@ class OBJ {
         this.matDiff = gl.getUniformLocation(this.program, "matDiffuse");
         this.matAmb = gl.getUniformLocation(this.program, "matAmbient");
         this.matAlpha = gl.getUniformLocation(this.program, "matAlpha");
-
-        
-    }
-
-    parseOBJ(text) {
-        var lines = text.split("\n");
-        var vertices = [];
-        var vnormals = [];
-        var vtxtures = [];
-
-        for (var line = 0; line < lines.length; line++) {
-            var strings = lines[line].trimRight().split(/[ ]+/);
-
-            switch (strings[0]) {
-                case "v":
-                    var vertex = vec4(
-                        parseFloat(strings[1]),
-                        parseFloat(strings[2]),
-                        parseFloat(strings[3]),
-                        1.0
-                    );
-                    vertices.push(vertex);
-                    break;
-                case "vn":
-                    var normal = vec3(
-                        parseFloat(strings[1]),
-                        parseFloat(strings[2]),
-                        parseFloat(strings[3])
-                    );
-                    vnormals.push(normal);
-                    break;
-                case "vt":
-                    var txture = vec2(
-                        parseFloat(strings[1]),
-                        parseFloat(strings[2])
-                    );
-                    vtxtures.push(txture);
-                    break;
-                case "f":
-                    var nStrings = strings.length - 1;
-                    // https://stackoverflow.com/questions/23723993/converting-quadriladerals-in-an-obj-file-into-triangles
-                    for (var i = 2; i < strings.length - 1; i++) {
-                        var pos1 = strings[1].split("/");
-                        var pos2 = strings[i].split("/");
-                        var pos3 = strings[i + 1].split("/");
-                        var a = vertices[parseInt(pos1[0]) - 1];
-                        var b = vertices[parseInt(pos2[0]) - 1];
-                        var c = vertices[parseInt(pos3[0]) - 1];
-                        var N = cross(
-                            subtract(
-                                vec3(b[0], b[1], b[2]),
-                                vec3(a[0], a[1], a[2])
-                            ),
-                            subtract(
-                                vec3(c[0], c[1], c[2]),
-                                vec3(a[0], a[1], a[2])
-                            )
-                        );
-                        if (N.includes(NaN)) {
-                            N = vec3(0, 0, 0);
-                        }
-                        this.vPositions.push(a);
-                        if (pos1[1] === "") {
-                            this.vTexCoords.push(vec2(0, 0));
-                        } else {
-                            this.vTexCoords.push(vtxtures[parseInt(pos1[1]) - 1]);
-                        }
-                        if (pos1.length == 3) {
-                            this.vNormals.push(vnormals[parseInt(pos1[2]) - 1]);
-                        } else {
-                            this.vNormals.push(N);
-                        }
-                        this.vPositions.push(b);
-                        if (pos2[1] === "") {
-                            this.vTexCoords.push(vec2(0, 1));
-                        } else {
-                            this.vTexCoords.push(vtxtures[parseInt(pos2[1]) - 1]);
-                        }
-                        if (pos2.length == 3) {
-                            this.vNormals.push(vnormals[parseInt(pos2[2]) - 1]);
-                        } else {
-                            this.vNormals.push(N);
-                        }
-                        this.vPositions.push(c);
-                        if (pos3[1] === "") {
-                            this.vTexCoords.push(vec2(1, 1));
-                        } else {
-                            this.vTexCoords.push(vtxtures[parseInt(pos3[1]) - 1]);
-                        }
-                        if (pos3.length == 3) {
-                            this.vNormals.push(vnormals[parseInt(pos3[2]) - 1]);
-                        } else {
-                            this.vNormals.push(N);
-                        }
-                    }
-                    break;
-            }
-        }
     }
 
     draw() {
@@ -268,27 +162,7 @@ class OBJ {
         // gl.disableVertexAttribArray(this.aColor);
         gl.disableVertexAttribArray(this.aNormal);
     }
-    setLocation(x, y, z) {
-        this.location = vec3(x, y, z);
-        this.locationMatrix = translate(x, y, z);
-        this.updateModelMatrix();
-    }
 
-    setSize(x, y, z) {
-        this.sizeMatrix = scale(x, y, z);
-        this.updateModelMatrix();
-    }
-
-    updateModelMatrix() {
-        var rotationMatrix = mult(
-            this.rotationZMatrix,
-            mult(this.rotationYMatrix, this.rotationXMatrix)
-        );
-        this.modelMatrix = mult(
-            this.locationMatrix,
-            mult(this.sizeMatrix, rotationMatrix)
-        );
-    }
     testCollision(ray) {
         this.minT = null;
         if (this.pickable) {
@@ -331,4 +205,27 @@ class OBJ {
             return false;
         }
     }
+
+    setLocation(x, y, z) {
+        this.location = vec3(x, y, z);
+        this.locationMatrix = translate(x, y, z);
+        this.updateModelMatrix();
+    }
+
+    setSize(x, y, z) {
+        this.sizeMatrix = scale(x, y, z);
+        this.updateModelMatrix();
+    }
+
+    updateModelMatrix() {
+        var rotationMatrix = mult(
+            this.rotationZMatrix,
+            mult(this.rotationYMatrix, this.rotationXMatrix)
+        );
+        this.modelMatrix = mult(
+            this.locationMatrix,
+            mult(this.sizeMatrix, rotationMatrix)
+        );
+    }
+
 }
