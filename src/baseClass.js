@@ -1,24 +1,23 @@
-class Plane {
-    constructor() {
-        let subdivs = 2;
-        this.numVertices = 2 * 4 ** subdivs * 3;
-        var a = vec3(-1, 0, 1);
-        var b = vec3(1, 0, 1);
-        var c = vec3(1, 0, -1);
-        var d = vec3(-1, 0, -1);
-        this.vPositions = [];
-        this.vTexCoords = [];
-        this.vNormals = [];
-        // this.vColors = [];
+class BaseClass {
+
+    constructor(texture) {
+        this.location = vec3(10, 0, 0);
+        this.xrot = 0;
+        this.yrot = 0;
+        this.zrot = 0;
+        this.time = 0.0;
         this.texture = -1;
         this.useShadowMap = true;
         this.uTextureUnitShader = -1;
         this.pickable = true;
         this.picked = false;
-        console.log('before')
-        this.divideQuad(a, b, c, d, subdivs);
-        console.log('after')
-        console.log(this.vTexCoords);
+
+        this.modelMatrix = mat4();
+        this.sizeMatrix = mat4();
+        this.locationMatrix = mat4();
+        this.rotationZMatrix = mat4();
+        this.rotationYMatrix = mat4();
+        this.rotationXMatrix = mat4();
 
         this.program = initShaders(gl, vshader_shadow_env, fshader_shadow_env);
         this.shadowProgram = initShaders(gl, vshader_shadow, fshader_shadow);
@@ -35,9 +34,10 @@ class Plane {
         }
         this.uTextureUnitShader = gl.getUniformLocation(this.program, "uTextureUnit");
 
-        image.src = "./textures/256x grass block.png"
+        image.src = texture;
+    }
 
-        // Load the data into the GPU
+    initBuffers() {
         this.vID = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.vID);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(this.vPositions), gl.STATIC_DRAW);
@@ -99,46 +99,6 @@ class Plane {
         this.matDiff = gl.getUniformLocation(this.program, "matDiffuse");
         this.matAmb = gl.getUniformLocation(this.program, "matAmbient");
         this.matAlpha = gl.getUniformLocation(this.program, "matAlpha");
-    }
-
-    divideQuad(a, b, c, d, depth) {
-        console.log(a, b, c, d);
-        console.log("i am inside: " + depth);
-        if (depth > 0) {
-            var v1 = mult(0.5, add(a, b));
-            var v2 = mult(0.5, add(b, c));
-            var v3 = mult(0.5, add(c, d));
-            var v4 = mult(0.5, add(d, a));
-            var v5 = mult(0.5, add(a, c));
-            this.divideQuad(a, v1, v5, v4, depth - 1);
-            this.divideQuad(v1, b, v2, v5, depth - 1);
-            this.divideQuad(v2, c, v3, v5, depth - 1);
-            this.divideQuad(v3, d, v4, v5, depth - 1);
-        } else {
-            //Triangle #1
-            this.triangle(a, b, c);
-            this.vTexCoords.push(vec2(0.0, 0.0)); //first vertex
-            this.vTexCoords.push(vec2(1.0, 0.0)); //second vertex
-            this.vTexCoords.push(vec2(1.0, 1.0)); //third vertex
-            //Triangle #2
-            this.triangle(c, d, a);
-            this.vTexCoords.push(vec2(0.0, 0.0)); //first vertex
-            this.vTexCoords.push(vec2(1.0, 0.0)); //second vertex
-            this.vTexCoords.push(vec2(1.0, 1.0)); //third vertex
-        }
-    }
-
-    triangle(a, b, c) {
-        var N = normalize(cross(subtract(b, a), subtract(c, a)));
-        this.vPositions.push(vec4(...a, 1.0));
-        this.vNormals.push(N);
-        // this.vColors.push(BLACK);
-        this.vPositions.push(vec4(...b, 1.0));
-        this.vNormals.push(N);
-        // this.vColors.push(RED);
-        this.vPositions.push(vec4(...c, 1.0));
-        this.vNormals.push(N);
-        // this.vColors.push(BLACK);
     }
 
     draw() {
@@ -267,43 +227,15 @@ class Plane {
         gl.drawArrays(gl.TRIANGLES, 0, this.numVertices);
         gl.disableVertexAttribArray(aPosition_shadow);
     }
-    divideQuad(a, b, c, d, depth) {
-        if (depth > 0) {
-            var v1 = mult(0.5, add(a, b));
-            var v2 = mult(0.5, add(b, c));
-            var v3 = mult(0.5, add(c, d));
-            var v4 = mult(0.5, add(d, a));
-            var v5 = mult(0.5, add(a, c));
-            this.divideQuad(a, v1, v5, v4, depth - 1);
-            this.divideQuad(v1, b, v2, v5, depth - 1);
-            this.divideQuad(v2, c, v3, v5, depth - 1);
-            this.divideQuad(v3, d, v4, v5, depth - 1);
-        } else {
-            //Triangle #1
-            this.triangle(a, b, c);
-            this.vTexCoords.push(vec2(0.0, 0.0)); //first vertex
-            this.vTexCoords.push(vec2(1.0, 0.0)); //second vertex
-            this.vTexCoords.push(vec2(1.0, 1.0)); //third vertex
-            //Triangle #2
-            this.triangle(c, d, a);
-            this.vTexCoords.push(vec2(0.0, 0.0)); //first vertex
-            this.vTexCoords.push(vec2(1.0, 0.0)); //second vertex
-            this.vTexCoords.push(vec2(1.0, 1.0)); //third vertex
-        }
+
+    updateModelMatrix() {
+        var rotationMatrix = mult(
+            this.rotationZMatrix,
+            mult(this.rotationYMatrix, this.rotationXMatrix)
+        );
+        this.modelMatrix = mult(
+            this.locationMatrix,
+            mult(this.sizeMatrix, rotationMatrix)
+        );
     }
-
-    triangle(a, b, c) {
-        // var N = normalize(cross(subtract(b, a), subtract(c, a)));
-        this.vPositions.push(vec4(...a, 1.0));
-        // this.vNormals.push(N);
-        // this.vColors.push(BLACK);
-        this.vPositions.push(vec4(...b, 1.0));
-        // this.vNormals.push(N);
-        // this.vColors.push(RED);
-        this.vPositions.push(vec4(...c, 1.0));
-        // this.vNormals.push(N);
-        // this.vColors.push(BLACK);
-    }
-
-
 }
