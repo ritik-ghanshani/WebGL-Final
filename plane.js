@@ -14,9 +14,8 @@ class Plane {
 
         this.divideQuad(a, b, c, d, subdivs);
 
-
         this.program = initShaders(gl, vShader, fShader);
-
+        this.shadowProgram = initShaders(gl, vshader_shadow, fshader_shadow);
         var image = new Image();
 
         image.onload = () => {
@@ -53,17 +52,22 @@ class Plane {
         // Get the location of the attribute and uniform variables from the shader program.
         // this.aColor = gl.getAttribLocation(this.program, "aColor");
         this.aPosition = gl.getAttribLocation(this.program, "aPosition");
+        this.smAPosition = gl.getAttribLocation(this.shadowProgram, "smAPosition");
         // this.aNormal = gl.getAttribLocation(this.program, "aNormal");
         this.aTextureCoord = gl.getAttribLocation(this.program, "aTextureCoord");
 
         this.modelMatrix = scale(10, 0, 10);
         this.modelMatrixID = gl.getUniformLocation(this.program, "modelMatrix");
+        this.smModelMatrix = gl.getAttribLocation(this.shadowProgram, "smModelMatrix");
 
         this.projMatrix = perspective(90, canvas.width / canvas.height, 0.1, 100);
         this.projMatrixID = gl.getUniformLocation(this.program, "projectionMatrix");
+        this.smProjectionMatrix = gl.getAttribLocation(this.shadowProgram, "smProjectionMatrix");
 
         this.camMatrixID = gl.getUniformLocation(this.program, "cameraMatrix");
+        this.smCameraMatrix = gl.getAttribLocation(this.shadowProgram, "smCameraMatrix");
 
+        this.smMaxDepth = gl.getAttribLocation(this.shadowProgram, "smMaxDepth");
         // this.lightPos1 = gl.getUniformLocation(this.program, "lightPos1");
         // this.lightDiff1 = gl.getUniformLocation(this.program, "lightDiffuse1");
         // this.lightSpec1 = gl.getUniformLocation(this.program, "lightSpecular1");
@@ -88,7 +92,20 @@ class Plane {
         // this.matAmb = gl.getUniformLocation(this.program, "matAmbient");
         // this.matAlpha = gl.getUniformLocation(this.program, "matAlpha");
     }
+    drawToShadowMap(projMatrix) {
+        gl.useProgram(this.shadowProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vID);
+        gl.vertexAttribPointer(this.smAPosition, 3, gl.FLOAT, false, 0, 0);
+        gl.uniformMatrix4fv(this.smModelMatrix, false, flatten(this.modelMatrix));
+        var cameraMatrix = lookAt(sun.position, add(sun.position, sun.direction), vec3(0, 0, 0), vec3(0, 1, 0));
+        gl.uniformMatrix4fv(this.smCameraMatrix, false, flatten(cameraMatrix));
+        gl.uniformMatrix4fv(this.smProjectionMatrix, false, flatten(projMatrix));
 
+        gl.uniform1f(this.smMaxDepth, maxDepth);
+        gl.enableVertexAttribArray(this.smAPosition);
+        gl.drawArrays(gl.TRIANGLES, 0, this.numVertices);
+        gl.disableVertexAttribArray(this.smAPosition);
+    }
     divideQuad(a, b, c, d, depth) {
         if (depth > 0) {
             var v1 = mult(0.5, add(a, b));

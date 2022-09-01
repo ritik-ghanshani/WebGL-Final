@@ -18,13 +18,15 @@ var sun;
 var sunAngle;
 var flash;
 
-
+var lights = [];
 var cam = new Camera(vec3(0, 0, 0), vec3(0, 1, 0));
 var light1 = new Light(vec3(0, 0, 0), vec3(0, 1, -1), vec4(0.4, 0.4, 0.4, 1.0), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), 0, 0, 1);
-
+lights.push(light1);
 var objects = [];
 const vshader = "./vshader/vshader.glsl";
 const fshader = "./fshader/fshader.glsl";
+const vshader_shadow = "./vshader/vshader_shadow.glsl";
+const fshader_shadow = "./fshader/fshader_shadow.glsl";
 
 window.onload = function init() {
 	canvas = document.getElementById("gl-canvas");
@@ -82,7 +84,7 @@ window.onload = function init() {
 
 	objects.push(new Plane(1, vshader, fshader));
 	objects.push(new Cube(vshader, fshader));
-
+	renderShadowMaps();
 	render();
 };
 
@@ -90,11 +92,10 @@ function renderShadowMaps() {
 	gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFrameBuffer);
 	gl.bindRenderbuffer(gl.RENDERBUFFER, shadowRenderBuffer);
 	gl.activeTexture(gl.TEXTURE0);
-	gl.bindTexture(gl.TEXTURE_2D, light.depthTexture);
-	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, light.depthTexture, 0);
+	gl.bindTexture(gl.TEXTURE_2D, light1.depthTexture);
+	gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, light1.depthTexture, 0);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-	for (var i = 1; i < objects.length; i++)
-		objects[i].drawToShadowMap();
+	objects.forEach((obj) => obj.drawToShadowMap(perspective(90, canvas.width / canvas.height, 0.1, 100)));
 	gl.bindFramebuffer(gl.FRAMEBUFFER, null); //return to screens buffers
 	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 }
