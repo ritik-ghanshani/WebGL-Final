@@ -78,19 +78,12 @@ window.onload = async function init() {
 	////////////////////////////////////////////////////////////////////
 	// 						END SHADOW MAPPING
 	///////////////////////////////////////////////////////////////////
-	
-	
-	const response = await fetch('/models/switch.obj');
-	const text = await response.text();
-
-	const ironman = await fetch('/models/ironman.obj');
-	const ironmanText = await ironman.text();
 
 	sunAngle = 0;
 
 	sun = new Light();
 	sun.setLocation(10, 0, 0);
-	sun.setAmbient(0.6, 0.6, 0.6);
+	sun.setAmbient(0.8, 0.8, 0.8);
 	sun.turnOn();
 	flash = new Light();
 	flash.setLocation(0, 5, 5);
@@ -101,13 +94,18 @@ window.onload = async function init() {
 	flash.turnOn();
 
 	objects.push(new Plane());
-	objects.push(new Cube());
 
-	switchObj = new OBJ(text, "/textures/brks.jpg")
+	cube = new Cube();
+	cube.setLocation(0, 5, 0);
+	cube.setSize(0.4, 0.4, 0.4);
+
+	objects.push(cube);
+
+	switchObj = new Switch(await loadOBJ("models/switch.obj"));
 	switchObj.setLocation(0.5 + 0.5 * 4, 0.05 * 4, 0 + 0.5 * 8.5);
 	switchObj.setSize(0.008, 0.008, 0.008);
 
-	ironMan = new OBJ(ironmanText, "/textures/ironman.jpg");
+	ironMan = new Robot(await loadOBJ("models/ironman.obj"));
 	ironMan.setLocation(0.5 + 0.5, 0.05 * 4, 0);
 	ironMan.setSize(0.03, 0.03, 0.03);
 
@@ -198,8 +196,6 @@ function mousedownHandler(event) {
 	xclip = 2 * (event.clientX / canvas.width) - 1.0;
 	yclip = 1.0 - 2 * (event.clientY / canvas.height);
 	var pfront = vec4(xclip, yclip, -1, 1);
-	console.log(pfront);
-	console.log(project_matrix);
 	var pcam = mult(inverse(project_matrix), pfront);
 	pcam[2] = -1;
 	pcam[3] = 0;
@@ -208,7 +204,6 @@ function mousedownHandler(event) {
 	var min_t = null;
 	var min_object = null;
 	objects.forEach((o) => {
-		console.log(o);
 		var t = o.testCollision(point);
 		if (t !== null && (min_t === null || t < min_t)) {
 			min_t = t;
@@ -220,3 +215,8 @@ function mousedownHandler(event) {
 	}
 }
 
+async function loadOBJ(file) {
+	var response = await fetch(file);
+	var text = await response.text();
+	return text;
+}
