@@ -1,5 +1,6 @@
 class Plane {
-    constructor(subdivs, vShader, fShader) {
+    constructor() {
+        let subdivs = 1;
         this.numVertices = 2 * 4 ** subdivs * 3;
         var a = vec3(-1, 0, 1);
         var b = vec3(1, 0, 1);
@@ -14,7 +15,7 @@ class Plane {
 
         this.divideQuad(a, b, c, d, subdivs);
 
-        this.program = initShaders(gl, vShader, fShader);
+        this.program = initShaders(gl, vshader_shadow_env, fshader_shadow_env);
         this.shadowProgram = initShaders(gl, vshader_shadow, fshader_shadow);
         var image = new Image();
 
@@ -52,22 +53,18 @@ class Plane {
         // Get the location of the attribute and uniform variables from the shader program.
         // this.aColor = gl.getAttribLocation(this.program, "aColor");
         this.aPosition = gl.getAttribLocation(this.program, "aPosition");
-        this.smAPosition = gl.getAttribLocation(this.shadowProgram, "smAPosition");
         // this.aNormal = gl.getAttribLocation(this.program, "aNormal");
-        this.aTextureCoord = gl.getAttribLocation(this.program, "aTextureCoord");
+        this.aTexs = gl.getAttribLocation(this.program, "aTexs");
 
         this.modelMatrix = scale(10, 0, 10);
         this.modelMatrixID = gl.getUniformLocation(this.program, "modelMatrix");
-        this.smModelMatrix = gl.getAttribLocation(this.shadowProgram, "smModelMatrix");
 
         this.projMatrix = perspective(90, canvas.width / canvas.height, 0.1, 100);
         this.projMatrixID = gl.getUniformLocation(this.program, "projectionMatrix");
-        this.smProjectionMatrix = gl.getAttribLocation(this.shadowProgram, "smProjectionMatrix");
 
         this.camMatrixID = gl.getUniformLocation(this.program, "cameraMatrix");
-        this.smCameraMatrix = gl.getAttribLocation(this.shadowProgram, "smCameraMatrix");
 
-        this.smMaxDepth = gl.getAttribLocation(this.shadowProgram, "smMaxDepth");
+
         // this.lightPos1 = gl.getUniformLocation(this.program, "lightPos1");
         // this.lightDiff1 = gl.getUniformLocation(this.program, "lightDiffuse1");
         // this.lightSpec1 = gl.getUniformLocation(this.program, "lightSpecular1");
@@ -92,58 +89,6 @@ class Plane {
         // this.matAmb = gl.getUniformLocation(this.program, "matAmbient");
         // this.matAlpha = gl.getUniformLocation(this.program, "matAlpha");
     }
-    drawToShadowMap(projMatrix) {
-        gl.useProgram(this.shadowProgram);
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vID);
-        gl.vertexAttribPointer(this.smAPosition, 3, gl.FLOAT, false, 0, 0);
-        gl.uniformMatrix4fv(this.smModelMatrix, false, flatten(this.modelMatrix));
-        var cameraMatrix = lookAt(sun.position, add(sun.position, sun.direction), vec3(0, 0, 0), vec3(0, 1, 0));
-        gl.uniformMatrix4fv(this.smCameraMatrix, false, flatten(cameraMatrix));
-        gl.uniformMatrix4fv(this.smProjectionMatrix, false, flatten(projMatrix));
-
-        gl.uniform1f(this.smMaxDepth, maxDepth);
-        gl.enableVertexAttribArray(this.smAPosition);
-        gl.drawArrays(gl.TRIANGLES, 0, this.numVertices);
-        gl.disableVertexAttribArray(this.smAPosition);
-    }
-    divideQuad(a, b, c, d, depth) {
-        if (depth > 0) {
-            var v1 = mult(0.5, add(a, b));
-            var v2 = mult(0.5, add(b, c));
-            var v3 = mult(0.5, add(c, d));
-            var v4 = mult(0.5, add(d, a));
-            var v5 = mult(0.5, add(a, c));
-            this.divideQuad(a, v1, v5, v4, depth - 1);
-            this.divideQuad(v1, b, v2, v5, depth - 1);
-            this.divideQuad(v2, c, v3, v5, depth - 1);
-            this.divideQuad(v3, d, v4, v5, depth - 1);
-        } else {
-            //Triangle #1
-            this.triangle(a, b, c);
-            this.vTexCoords.push(vec2(0.0, 0.0)); //first vertex
-            this.vTexCoords.push(vec2(1.0, 0.0)); //second vertex
-            this.vTexCoords.push(vec2(1.0, 1.0)); //third vertex
-            //Triangle #2
-            this.triangle(c, d, a);
-            this.vTexCoords.push(vec2(0.0, 0.0)); //first vertex
-            this.vTexCoords.push(vec2(1.0, 0.0)); //second vertex
-            this.vTexCoords.push(vec2(1.0, 1.0)); //third vertex
-        }
-    }
-
-    triangle(a, b, c) {
-        // var N = normalize(cross(subtract(b, a), subtract(c, a)));
-        this.vPositions.push(vec4(...a, 1.0));
-        // this.vNormals.push(N);
-        // this.vColors.push(BLACK);
-        this.vPositions.push(vec4(...b, 1.0));
-        // this.vNormals.push(N);
-        // this.vColors.push(RED);
-        this.vPositions.push(vec4(...c, 1.0));
-        // this.vNormals.push(N);
-        // this.vColors.push(BLACK);
-    }
-
     draw() {
         if (this.texture === -1) return
 
@@ -153,7 +98,7 @@ class Plane {
         gl.vertexAttribPointer(this.aPosition, 4, gl.FLOAT, false, 0, 0);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.tCoordID);
-        gl.vertexAttribPointer(this.aTextureCoord, 2, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(this.aTexs, 2, gl.FLOAT, false, 0, 0);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.uniform1i(this.uTextureUnitShader, 0);
@@ -200,4 +145,65 @@ class Plane {
         // gl.disableVertexAttribArray(this.aColor);
         // gl.disableVertexAttribArray(this.aNormal);
     }
+
+    drawToShadowMap(projMatrix) {
+        let maxDepth = 100.0;
+        let aPosition_shadow = gl.getAttribLocation(this.shadowProgram, "aPosition");
+        let modelMatrix_shadow = gl.getUniformLocation(this.shadowProgram, "modelMatrix");
+        let projectionMatrix_shadow = gl.getUniformLocation(this.shadowProgram, "projectionMatrix");
+        let cameraMatrix_shadow = gl.getUniformLocation(this.shadowProgram, "cameraMatrix");
+        let maxDepth_shadow = gl.getUniformLocation(this.shadowProgram, "maxDepth");
+
+        gl.useProgram(this.shadowProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vID);
+        gl.vertexAttribPointer(aPosition_shadow, 3, gl.FLOAT, false, 0, 0);
+        gl.uniformMatrix4fv(modelMatrix_shadow, false, flatten(this.modelMatrix));
+        let cameraMatrix = lookAt(vec3(...sun.position.slice(0, 3)), add(vec3(...sun.position.slice(0, 3)), vec3(...sun.direction.slice(0, 3))), vec3(0, 0, 0), vec3(0, 1, 0));
+        gl.uniformMatrix4fv(cameraMatrix_shadow, false, flatten(cameraMatrix));
+        gl.uniformMatrix4fv(projectionMatrix_shadow, false, flatten(projMatrix));
+
+        gl.uniform1f(maxDepth_shadow, maxDepth);
+        gl.enableVertexAttribArray(aPosition_shadow);
+        gl.drawArrays(gl.TRIANGLES, 0, this.numVertices);
+        gl.disableVertexAttribArray(aPosition_shadow);
+    }
+    divideQuad(a, b, c, d, depth) {
+        if (depth > 0) {
+            var v1 = mult(0.5, add(a, b));
+            var v2 = mult(0.5, add(b, c));
+            var v3 = mult(0.5, add(c, d));
+            var v4 = mult(0.5, add(d, a));
+            var v5 = mult(0.5, add(a, c));
+            this.divideQuad(a, v1, v5, v4, depth - 1);
+            this.divideQuad(v1, b, v2, v5, depth - 1);
+            this.divideQuad(v2, c, v3, v5, depth - 1);
+            this.divideQuad(v3, d, v4, v5, depth - 1);
+        } else {
+            //Triangle #1
+            this.triangle(a, b, c);
+            this.vTexCoords.push(vec2(0.0, 0.0)); //first vertex
+            this.vTexCoords.push(vec2(1.0, 0.0)); //second vertex
+            this.vTexCoords.push(vec2(1.0, 1.0)); //third vertex
+            //Triangle #2
+            this.triangle(c, d, a);
+            this.vTexCoords.push(vec2(0.0, 0.0)); //first vertex
+            this.vTexCoords.push(vec2(1.0, 0.0)); //second vertex
+            this.vTexCoords.push(vec2(1.0, 1.0)); //third vertex
+        }
+    }
+
+    triangle(a, b, c) {
+        // var N = normalize(cross(subtract(b, a), subtract(c, a)));
+        this.vPositions.push(vec4(...a, 1.0));
+        // this.vNormals.push(N);
+        // this.vColors.push(BLACK);
+        this.vPositions.push(vec4(...b, 1.0));
+        // this.vNormals.push(N);
+        // this.vColors.push(RED);
+        this.vPositions.push(vec4(...c, 1.0));
+        // this.vNormals.push(N);
+        // this.vColors.push(BLACK);
+    }
+
+
 }
