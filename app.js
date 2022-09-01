@@ -14,9 +14,12 @@ var gl;
 var shadowFrameBuffer;
 var shadowRenderBuffer;
 
+var project_matrix;
+
 var sun;
 var sunAngle;
 var flash;
+var switchObj;
 
 var lights = [];
 var cam = new Camera(vec3(0, 0, 0), vec3(0, 1, 0));
@@ -30,7 +33,11 @@ const fshader_shadow = "./fshader/fshader_shadow.glsl";
 const vshader_shadow_env = "./vshader/vshader_shadow_env.glsl";
 const fshader_shadow_env = "./fshader/fshader_shadow_env.glsl";
 
-window.onload = function init() {
+window.onload = async function init() {
+
+
+	window.addEventListener("mousedown", mousedownHandler);
+
 	canvas = document.getElementById("gl-canvas");
 	gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true });
 	if (!gl) { alert("WebGL 2.0 isn't available"); }
@@ -38,7 +45,7 @@ window.onload = function init() {
 	gl.viewport(0, 0, canvas.width, canvas.height);
 	gl.polygonOffset(1, 1);
 	gl.enable(gl.POLYGON_OFFSET_FILL);
-	gl.clearColor(...LIGHTGRAY);
+	gl.clearColor(...BLACK);
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
 	sunAngle = 0;
@@ -57,6 +64,13 @@ window.onload = function init() {
 
 	lights.push(sun);
 	lights.push(flash);
+
+	project_matrix = perspective(
+		45,
+		canvas.width / canvas.height,
+		0.1,
+		100
+	);
 
 	////////////////////////////////////////////////////////////////////
 	// 						SHADOW MAPPING
@@ -87,10 +101,44 @@ window.onload = function init() {
 
 	////////////////////////////////////////////////////////////////////
 	// 						END SHADOW MAPPING
-	/////////////////////////////////////////////////////////////////// 
+	///////////////////////////////////////////////////////////////////
+	
+	
+	const response = await fetch('/models/switch.obj');
+	const text = await response.text();
 
+	const ironman = await fetch('/models/ironman.obj');
+	const ironmanText = await ironman.text();
+
+	sunAngle = 0;
+
+	sun = new Light();
+	sun.setLocation(10, 0, 0);
+	sun.setAmbient(0.6, 0.6, 0.6);
+	sun.turnOn();
+	flash = new Light();
+	flash.setLocation(0, 5, 5);
+	flash.setDirection(0, -Math.sqrt(2) / 2, -Math.sqrt(2) / 2);
+	flash.setAmbient(0.4, 0.4, 0.4);
+	flash.setSpecular(1, 1, 1);
+	flash.setDiffuse(1, 0, 1);
+	flash.turnOn();
 
 	objects.push(new Plane());
+	objects.push(new Cube());
+
+	switchObj = new OBJ(text, "/textures/brks.jpg")
+	switchObj.setLocation(0.5 + 0.5 * 4, 0.05 * 4, 0 + 0.5 * 8.5);
+	switchObj.setSize(0.008, 0.008, 0.008);
+
+	ironMan = new OBJ(ironmanText, "/textures/ironman.jpg");
+	ironMan.setLocation(0.5 + 0.5, 0.05 * 4, 0);
+	ironMan.setSize(0.03, 0.03, 0.03);
+
+	objects.push(switchObj);
+	objects.push(ironMan);
+
+	// objects.push(new Plane());
 	// objects.push(new Cube(vshader_shadow_env, fshader_shadow_env));
 	render();
 };
@@ -117,9 +165,10 @@ function render() {
 
 		objects.forEach((obj) => obj.draw());
 
-		sunAngle += 0.1;
-		sun = new Light();
-		sun.setLocation(10 * Math.cos(sunAngle), 0, 10 * Math.sin(sunAngle), 1);
+		// sunAngle += 0.1;
+		// sun = new Light();
+		// sun.setLocation(10 * Math.cos(sunAngle), 0, 10 * Math.sin(sunAngle), 1);
+		// sun.turnOn();
 
 
 	}, 50);  //10fps
@@ -171,3 +220,31 @@ document.addEventListener('keydown', event => {
 			break;
 	}
 })
+
+function mousedownHandler(event) {
+	// Implementing picking
+	xclip = 2 * (event.clientX / canvas.width) - 1.0;
+	yclip = 1.0 - 2 * (event.clientY / canvas.height);
+	var pfront = vec4(xclip, yclip, -1, 1);
+	console.log(pfront);
+	console.log(project_matrix);
+	var pcam = mult(inverse(project_matrix), pfront);
+	pcam[2] = -1;
+	pcam[3] = 0;
+	var pworld = mult(inverse(cam.camMatrix), pcam);
+	var point = normalize(vec3(pworld[0], pworld[1], pworld[2]));
+	var min_t = null;
+	var min_object = null;
+	objects.forEach((o) => {
+		console.log(o);
+		var t = o.testCollision(point);
+		if (t !== null && (min_t === null || t < min_t)) {
+			min_t = t;
+			min_object = o;
+		}
+	});
+	if (min_object !== null) {
+		min_object.onPick();
+	}
+}
+

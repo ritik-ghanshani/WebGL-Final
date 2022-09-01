@@ -11,6 +11,10 @@ class Camera {
         this.updateCamMatrix();
     }
 
+    getPosition() {
+        return this.eye;
+    }
+
     moveN(amt) {
         this.eye = add(this.eye, mult(-amt, this.n));
         this.updateCamMatrix();
