@@ -128,24 +128,4 @@ void main() {
    } else {
       fColor = color;
    }
-   if(useReflection) {
-      fColor = mix(fColor, texture(textureUnit, R), 0.70);
-   } else {
-      fColor = fColor * texture(textureID, texCoord);
-   }
-
-   if(useDistort) {
-      fColor *= scanLine(gl_FragCoord.x, 4200.0, 0.1);
-      fColor *= scanLine(gl_FragCoord.y, 4200.0, 0.1);
-      vec2 p = (3.0 * gl_FragCoord.xy - 800.0) / 800.0;
-      for(int i = 1; i < 22; i++) {
-         vec2 newp = p;
-         newp.x += 0.65 / float(i) * sin(float(i) * p.y + time / 20.0 + 0.3 * float(i));
-         newp.y += 0.65 / float(i) * sin(float(i) * p.x + time / 10.0 + 0.3 * float(i + 10)) + 15.0;
-         p = newp;
-      }
-      vec3 col = vec3(0.5 * sin(4.0 * p.x) + 0.5, 0.5 * sin(3.0 * p.y) + 0.5, sin(p.x + p.y));
-      fColor = mix(fColor, vec4(col, 1.0), 0.1);
-      fColor.a = 1.0;
-   }
 }
