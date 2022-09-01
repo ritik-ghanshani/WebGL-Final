@@ -1,4 +1,4 @@
-class OBJ extends BaseClass{
+class OBJ extends BaseClass {
     constructor(text, texture_path) {
         super(texture_path);
 
@@ -12,7 +12,7 @@ class OBJ extends BaseClass{
     }
 
     parseOBJ(text) {
-        var lines = text.split("\n");
+        const lines = text.split(/\r?\n/);
         var vertices = [];
         var vnormals = [];
         var vtxtures = [];

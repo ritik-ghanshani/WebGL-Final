@@ -20,12 +20,16 @@ var sun;
 var sunAngle;
 var flash;
 var switchObj;
-
+var sphere;
+var ironMan;
+var sphere_size;
+var theta = 0;
 var lights = [];
 var cam = new Camera(vec3(0, 0, 0), vec3(0, 1, 0));
 // var light1 = new Light(vec3(0, 0, 0), vec3(0, 1, -1), vec4(0.4, 0.4, 0.4, 1.0), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), 0, 0, 1);
 // lights.push(light1);
 var objects = [];
+var obj = [];
 const vshader = "./vshader/vshader.glsl";
 const fshader = "./fshader/fshader.glsl";
 const vshader_shadow = "./vshader/vshader_shadow.glsl";
@@ -34,11 +38,13 @@ const vshader_shadow_env = "./vshader/vshader_shadow_env.glsl";
 const fshader_shadow_env = "./fshader/fshader_shadow_env.glsl";
 
 window.onload = async function init() {
-
-
-	window.addEventListener("mousedown", mousedownHandler);
-
 	canvas = document.getElementById("gl-canvas");
+	canvas.addEventListener("mousedown", mousedownHandler);
+
+	Array.prototype.sample = function () {
+		return this[Math.floor(Math.random() * this.length)];
+	}
+
 	gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true });
 	if (!gl) { alert("WebGL 2.0 isn't available"); }
 	gl.enable(gl.DEPTH_TEST);
@@ -117,27 +123,33 @@ window.onload = async function init() {
 	flash.setDiffuse(1, 0, 1);
 	flash.turnOn();
 
-	objects.push(new Plane());
+	plane = new Plane();
+	objects.push(plane);
+	obj.push(plane);
 
 	cube = new Cube();
 	cube.setLocation(0, 5, 0);
 	cube.setSize(0.4, 0.4, 0.4);
 
+	sphere = new Sphere();
+	objects.push(sphere);
+	obj.push(sphere);
+
 	objects.push(cube);
+	obj.push(cube);
 
 	switchObj = new Switch(await loadOBJ("models/switch.obj"));
 	switchObj.setLocation(0.5 + 0.5 * 4, 0.05 * 4, 0 + 0.5 * 8.5);
 	switchObj.setSize(0.008, 0.008, 0.008);
+	objects.push(switchObj);
+	obj.push(switchObj);
 
 	ironMan = new Robot(await loadOBJ("models/ironman.obj"));
 	ironMan.setLocation(0.5 + 0.5, 0.05 * 4, 0);
 	ironMan.setSize(0.03, 0.03, 0.03);
-
-	objects.push(switchObj);
 	objects.push(ironMan);
+	obj.push(ironMan);
 
-	// objects.push(new Plane());
-	// objects.push(new Cube(vshader_shadow_env, fshader_shadow_env));
 	render();
 };
 
@@ -160,7 +172,20 @@ function render() {
 		renderShadowMaps();
 		requestAnimationFrame(render);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
+		if (switchObj.picked) {
+			let a = { ...obj.sample() }; //deep copy
+			a.setLocation(getRandomIntInclusive(-5, 5), getRandomIntInclusive(-5, 5), getRandomIntInclusive(-5, 5));
+			a.setSize(Math.random(), Math.random(), Math.random());
+			objects.push(a);
+			switchObj.picked = false;
+		}
+		theta += 0.01;
+		objects
+			.filter(o => o.constructor.name === "Sphere")
+			.forEach(s => {
+				let a = sphere_size + 5 * Math.sin(theta);
+				s.setSize(a, a, a);
+			})
 		objects.forEach((obj) => obj.draw());
 
 		// sunAngle += 0.1;
@@ -244,7 +269,12 @@ function mousedownHandler(event) {
 }
 
 async function loadOBJ(file) {
-	var response = await fetch(file);
-	var text = await response.text();
+	const response = await fetch(file);
+	const text = await response.text();
 	return text;
+}
+function getRandomIntInclusive(min, max) {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	return Math.floor(Math.random() * (max - min + 1) + min);
 }

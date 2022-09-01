@@ -110,7 +110,7 @@ class BaseClass {
         gl.vertexAttribPointer(this.aPosition, 4, gl.FLOAT, false, 0, 0);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, this.tCoordID);
-        gl.vertexAttribPointer(this.aTexs, 2, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(this.aTextureCoord, 2, gl.FLOAT, false, 0, 0);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.uniform1i(this.uTextureUnitShader, 0);
@@ -237,5 +237,14 @@ class BaseClass {
             this.locationMatrix,
             mult(this.sizeMatrix, rotationMatrix)
         );
+    }
+    setLocation(x, y, z) {
+        this.location = vec3(x, y, z);
+        this.locationMatrix = translate(x, y, z);
+        this.updateModelMatrix();
+    }
+    setSize(x, y, z) {
+        this.sizeMatrix = scale(x, y, z);
+        this.updateModelMatrix();
     }
 }
