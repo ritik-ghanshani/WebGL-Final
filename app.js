@@ -112,19 +112,26 @@ window.onload = async function init() {
 	flash.turnOn();
 
 	plane = new Plane();
+	plane.setSize(500, 500, 500);
 	objects.push(plane);
 	obj.push(plane.constructor.name);
 
 	cube = new Cube();
 	cube.setLocation(0, 5, 0);
 	cube.setSize(0.4, 0.4, 0.4);
+	objects.push(cube);
+	obj.push(cube.constructor.name);
+
+	pyramid = new Pyramid();
+	pyramid.setSize(5, 5, 5);
+	pyramid.setLocation(-10, 0, 0);
+	objects.push(pyramid);
+	obj.push(pyramid.constructor.name);
 
 	sphere = new Sphere();
 	objects.push(sphere);
 	obj.push(sphere.constructor.name);
 
-	objects.push(cube);
-	obj.push(cube.constructor.name);
 
 	switchObj2 = await loadOBJ("models/switch.obj")
 	switchObj = new Switch(switchObj2);
@@ -172,6 +179,9 @@ function render() {
 				case "Cube":
 					a = new Cube();
 					break;
+				case "Pyramid":
+					a = new Pyramid();
+					break;
 				case "Robot":
 					a = new Robot(robotObj);
 					break;
@@ -179,7 +189,7 @@ function render() {
 					a = new Switch(switchObj2);
 					break;
 			}
-			a.setLocation(getRandomIntInclusive(-5, 5), getRandomIntInclusive(-5, 5), getRandomIntInclusive(-5, 5));
+			a.setLocation(getRandomIntInclusive(-20, 20), 0, getRandomIntInclusive(-20, 20));
 			a.setSize(Math.random(), Math.random(), Math.random());
 			objects.push(a);
 			switchObj.picked = false;
@@ -188,7 +198,7 @@ function render() {
 		objects
 			.filter(o => o.constructor.name === "Sphere")
 			.forEach(s => {
-				let a = sphere_size + 5 * Math.sin(theta);
+				let a = sphere_size + 3 * Math.sin(theta);
 				s.setSize(a, a, a);
 			})
 		if (selected_cam.constructor.name === "RoboCam") {
