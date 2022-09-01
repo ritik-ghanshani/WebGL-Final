@@ -23,10 +23,11 @@ var flash;
 var switchObj;
 var sphere;
 var ironMan;
-var sphere_size;
+var sphere_size = 1;
 var theta = 0;
 var lights = [];
-
+var robotObj;
+var switchObj2;
 var selected_cam;
 
 var worldCam;
@@ -35,12 +36,8 @@ var worldCam;
 // lights.push(light1);
 var objects = [];
 var obj = [];
-const vshader = "./vshader/vshader.glsl";
-const fshader = "./fshader/fshader.glsl";
-const vshader_shadow = "./vshader/vshader_shadow.glsl";
-const fshader_shadow = "./fshader/fshader_shadow.glsl";
-const vshader_shadow_env = "./vshader/vshader_shadow_env.glsl";
-const fshader_shadow_env = "./fshader/fshader_shadow_env.glsl";
+const vshader = "./vshader/vshader_plane.glsl";
+const fshader = "./fshader/fshader_plane.glsl";
 
 window.onload = async function init() {
 	canvas = document.getElementById("gl-canvas");
@@ -100,37 +97,6 @@ window.onload = async function init() {
 		100
 	);
 
-	////////////////////////////////////////////////////////////////////
-	// 						SHADOW MAPPING
-	/////////////////////////////////////////////////////////////////// 
-	let vpWidth = 512, vpHeight = 512;
-	shadowFrameBuffer = gl.createFramebuffer();
-	shadowFrameBuffer.width = vpWidth;
-	shadowFrameBuffer.height = vpHeight;
-	gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFrameBuffer);
-
-	shadowRenderBuffer = gl.createRenderbuffer();
-	gl.bindRenderbuffer(gl.RENDERBUFFER, shadowRenderBuffer);
-	gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, vpWidth, vpHeight);
-	gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, shadowRenderBuffer);
-
-	lights.forEach((light) => {
-		light.depthTexture = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, light.depthTexture);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, vpWidth, vpHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-		gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-		gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-		gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null); //restore to window frame/depth buffer
-		gl.bindRenderbuffer(gl.RENDERBUFFER, null)
-	})
-
-	////////////////////////////////////////////////////////////////////
-	// 						END SHADOW MAPPING
-	///////////////////////////////////////////////////////////////////
-
 	sunAngle = 0;
 
 	sun = new Light();
@@ -147,7 +113,7 @@ window.onload = async function init() {
 
 	plane = new Plane();
 	objects.push(plane);
-	obj.push(plane);
+	obj.push(plane.constructor.name);
 
 	cube = new Cube();
 	cube.setLocation(0, 5, 0);
@@ -155,18 +121,20 @@ window.onload = async function init() {
 
 	sphere = new Sphere();
 	objects.push(sphere);
-	obj.push(sphere);
+	obj.push(sphere.constructor.name);
 
 	objects.push(cube);
-	obj.push(cube);
+	obj.push(cube.constructor.name);
 
-	switchObj = new Switch(await loadOBJ("models/switch.obj"));
+	switchObj2 = await loadOBJ("models/switch.obj")
+	switchObj = new Switch(switchObj2);
 	switchObj.setLocation(0.5 + 0.5 * 4, 0.05 * 4, 0 + 0.5 * 8.5);
 	switchObj.setSize(0.008, 0.008, 0.008);
 	objects.push(switchObj);
-	obj.push(switchObj);
+	obj.push(switchObj.constructor.name);
 
-	ironMan = new Robot(await loadOBJ("models/ironman.obj"));
+	robotObj = await loadOBJ("models/ironman.obj");
+	ironMan = new Robot(robotObj);
 	ironMan.setLocation(0.5 + 0.5, 0.05 * 4, 0);
 	ironMan.setSize(0.03, 0.03, 0.03);
 
@@ -182,32 +150,35 @@ window.onload = async function init() {
 	selected_cam = worldCam;
 	objects.push(switchObj);
 	objects.push(ironMan);
-	obj.push(ironMan);
+	obj.push(ironMan.constructor.name);
 
 	render();
 };
 
-function renderShadowMaps() {
-	lights.forEach(light => {
-		gl.bindFramebuffer(gl.FRAMEBUFFER, shadowFrameBuffer);
-		gl.bindRenderbuffer(gl.RENDERBUFFER, shadowRenderBuffer);
-		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, light.depthTexture);
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, light.depthTexture, 0);
-		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		objects.filter((obj) => obj.useShadowMap).forEach((obj) => obj.drawToShadowMap(perspective(90, canvas.width / canvas.height, 0.1, 100)));
-		gl.bindFramebuffer(gl.FRAMEBUFFER, null); //return to screens buffers
-		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-	})
-}
-
 function render() {
 	setTimeout(() => {
-		renderShadowMaps();
 		requestAnimationFrame(render);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		if (switchObj.picked) {
-			let a = { ...obj.sample() }; //deep copy
+			let sample = obj.sample();
+			let a;
+			switch (sample) {
+				case "Plane":
+					a = new Plane();
+					break;
+				case "Sphere":
+					a = new Sphere();
+					break;
+				case "Cube":
+					a = new Cube();
+					break;
+				case "Robot":
+					a = new Robot(robotObj);
+					break;
+				case "Switch":
+					a = new Switch(switchObj2);
+					break;
+			}
 			a.setLocation(getRandomIntInclusive(-5, 5), getRandomIntInclusive(-5, 5), getRandomIntInclusive(-5, 5));
 			a.setSize(Math.random(), Math.random(), Math.random());
 			objects.push(a);

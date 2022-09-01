@@ -110,6 +110,5 @@ void main()
 
 
     gl_Position = projectionMatrix*cameraMatrix*modelMatrix*aPosition;
-    shadow_coord = lightProjMatrix * lightCameraMatrix * modelMatrix * aPosition;
     vTextureCoord = aTextureCoord;
 }

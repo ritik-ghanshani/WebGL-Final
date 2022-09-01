@@ -19,8 +19,7 @@ class BaseClass {
         this.rotationYMatrix = mat4();
         this.rotationXMatrix = mat4();
 
-        this.program = initShaders(gl, vshader_shadow_env, fshader_shadow_env);
-        this.shadowProgram = initShaders(gl, vshader_shadow, fshader_shadow);
+        this.program = initShaders(gl, vshader, fshader);
         var image = new Image();
 
         image.onload = () => {
@@ -204,28 +203,6 @@ class BaseClass {
         } else {
             return false;
         }
-    }
-
-    drawToShadowMap(projMatrix) {
-        let maxDepth = 100.0;
-        let aPosition_shadow = gl.getAttribLocation(this.shadowProgram, "aPosition");
-        let modelMatrix_shadow = gl.getUniformLocation(this.shadowProgram, "modelMatrix");
-        let projectionMatrix_shadow = gl.getUniformLocation(this.shadowProgram, "projectionMatrix");
-        let cameraMatrix_shadow = gl.getUniformLocation(this.shadowProgram, "cameraMatrix");
-        let maxDepth_shadow = gl.getUniformLocation(this.shadowProgram, "maxDepth");
-
-        gl.useProgram(this.shadowProgram);
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vID);
-        gl.vertexAttribPointer(aPosition_shadow, 3, gl.FLOAT, false, 0, 0);
-        gl.uniformMatrix4fv(modelMatrix_shadow, false, flatten(this.modelMatrix));
-        let cameraMatrix = lookAt(vec3(...sun.position.slice(0, 3)), add(vec3(...sun.position.slice(0, 3)), vec3(...sun.direction.slice(0, 3))), vec3(0, 0, 0), vec3(0, 1, 0));
-        gl.uniformMatrix4fv(cameraMatrix_shadow, false, flatten(cameraMatrix));
-        gl.uniformMatrix4fv(projectionMatrix_shadow, false, flatten(projMatrix));
-
-        gl.uniform1f(maxDepth_shadow, maxDepth);
-        gl.enableVertexAttribArray(aPosition_shadow);
-        gl.drawArrays(gl.TRIANGLES, 0, this.numVertices);
-        gl.disableVertexAttribArray(aPosition_shadow);
     }
 
     updateModelMatrix() {
