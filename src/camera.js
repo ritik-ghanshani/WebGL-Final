@@ -1,13 +1,11 @@
 class Camera {
-    constructor(at, up) {
+    constructor() {
         this.camMatrix = mat4();
-        this.r = 5;
-        this.h = 5;
-        this.t = 0;
-        this.eye = vec3(this.r * Math.sin(this.t), this.h, this.r * Math.cos(this.t));
-        this.n = normalize(subtract(this.eye, at));
-        this.u = normalize(cross(up, this.n));
-        this.v = cross(this.n, this.u);
+
+        this.eye = vec3(0, 1, 1);
+        this.u = vec3(1, 0, 0);
+        this.v = vec3(0, 1, 0);
+        this.n = vec3(0, 0, 1);
         this.updateCamMatrix();
     }
 

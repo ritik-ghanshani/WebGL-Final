@@ -15,6 +15,7 @@ var shadowFrameBuffer;
 var shadowRenderBuffer;
 
 var project_matrix;
+var robo_project_matrix;
 
 var sun;
 var sunAngle;
@@ -23,7 +24,8 @@ var switchObj;
 
 
 var cam = new Camera(vec3(0, 0, 0), vec3(0, 1, 0));
-var light1 = new Light(vec3(0, 0, 0), vec3(0, 1, -1), vec4(0.4, 0.4, 0.4, 1.0), vec4(1, 1, 1, 1), vec4(1, 1, 1, 1), 0, 0, 1);
+
+var roboCam = new RoboCam();
 
 var objects = [];
 
@@ -44,6 +46,13 @@ window.onload = async function init() {
 
 	project_matrix = perspective(
 		45,
+		canvas.width / canvas.height,
+		0.1,
+		100
+	);
+
+	robo_projection_matrix = perspective(
+		90,
 		canvas.width / canvas.height,
 		0.1,
 		100
@@ -109,6 +118,15 @@ window.onload = async function init() {
 	ironMan.setLocation(0.5 + 0.5, 0.05 * 4, 0);
 	ironMan.setSize(0.03, 0.03, 0.03);
 
+	var cameraRad = ironMan.yrot * ((2 * Math.PI) / 360);
+	roboCam.setPosition(
+		...add(
+			ironMan.getLocation(),
+			vec3(-0.25 * Math.sin(cameraRad), 0.25, -0.25 * Math.cos(cameraRad))
+		)
+	);
+	roboCam.setAt(...add(ironMan.getLocation(), vec3(0, 0.25, 0)));
+
 	objects.push(switchObj);
 	objects.push(ironMan);
 
@@ -131,16 +149,8 @@ function renderShadowMaps() {
 function render() {
 	setTimeout(() => {
 		requestAnimationFrame(render);
-		// renderShadowMaps();
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 		objects.forEach((obj) => obj.draw());
-
-		// sunAngle += 0.1;
-		// sun = new Light();
-		// sun.setLocation(10 * Math.cos(sunAngle), 0, 10 * Math.sin(sunAngle), 1);
-		// sun.turnOn();
-
-
 	}, 50);  //10fps
 }
 
@@ -186,7 +196,6 @@ document.addEventListener('keydown', event => {
 			} else {
 				flash.turnOn();
 			}
-			console.log(flash.on);
 			break;
 	}
 })
