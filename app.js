@@ -102,8 +102,8 @@ window.onload = async function init() {
 	////////////////////////////////////////////////////////////////////
 	// 						END SHADOW MAPPING
 	///////////////////////////////////////////////////////////////////
-	
-	
+
+
 	const response = await fetch('/models/switch.obj');
 	const text = await response.text();
 
@@ -151,7 +151,7 @@ function renderShadowMaps() {
 		gl.bindTexture(gl.TEXTURE_2D, light.depthTexture);
 		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, light.depthTexture, 0);
 		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-		objects.forEach((obj) => obj.drawToShadowMap(perspective(90, canvas.width / canvas.height, 0.1, 100)));
+		objects.filter((obj) => obj.useShadowMap).forEach((obj) => obj.drawToShadowMap(perspective(90, canvas.width / canvas.height, 0.1, 100)));
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null); //return to screens buffers
 		gl.bindRenderbuffer(gl.RENDERBUFFER, null);
 	})
@@ -226,8 +226,8 @@ function mousedownHandler(event) {
 	xclip = 2 * (event.clientX / canvas.width) - 1.0;
 	yclip = 1.0 - 2 * (event.clientY / canvas.height);
 	var pfront = vec4(xclip, yclip, -1, 1);
-	console.log(pfront);
-	console.log(project_matrix);
+	// console.log(pfront);
+	// console.log(project_matrix);
 	var pcam = mult(inverse(project_matrix), pfront);
 	pcam[2] = -1;
 	pcam[3] = 0;
@@ -236,7 +236,7 @@ function mousedownHandler(event) {
 	var min_t = null;
 	var min_object = null;
 	objects.forEach((o) => {
-		console.log(o);
+		// console.log(o);
 		var t = o.testCollision(point);
 		if (t !== null && (min_t === null || t < min_t)) {
 			min_t = t;

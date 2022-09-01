@@ -25,7 +25,7 @@ class OBJ {
         TEXTURE.onload = function () {
             self.texture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_2D, self.texture);
-            gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,this.width,this.height,0,gl.RGB,gl.UNSIGNED_BYTE,TEXTURE);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, this.width, this.height, 0, gl.RGB, gl.UNSIGNED_BYTE, TEXTURE);
 
             gl.generateMipmap(gl.TEXTURE_2D);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
@@ -43,9 +43,9 @@ class OBJ {
         this.parseOBJ(text);
         this.numVertices = this.vPositions.length;
 
-        console.log(this.vPositions);
-        console.log(this.vNormals);
-        console.log(this.vTexCoords);
+        // console.log(this.vPositions);
+        // console.log(this.vNormals);
+        // console.log(this.vTexCoords);
 
         // Load the data into the GPU
         this.vID = gl.createBuffer();
@@ -64,7 +64,7 @@ class OBJ {
         this.nID = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.nID);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(this.vNormals), gl.STATIC_DRAW);
-        
+
         this.aPosition = gl.getAttribLocation(this.program, "aPosition");
         this.aNormal = gl.getAttribLocation(this.program, "aNormal");
         this.aTextureCoord = gl.getAttribLocation(this.program, "aTextureCoord");
@@ -108,7 +108,7 @@ class OBJ {
         this.matAmb = gl.getUniformLocation(this.program, "matAmbient");
         this.matAlpha = gl.getUniformLocation(this.program, "matAlpha");
 
-        
+
     }
 
     parseOBJ(text) {

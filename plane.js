@@ -1,6 +1,6 @@
 class Plane {
     constructor() {
-        let subdivs = 1;
+        let subdivs = 2;
         this.numVertices = 2 * 4 ** subdivs * 3;
         var a = vec3(-1, 0, 1);
         var b = vec3(1, 0, 1);
@@ -11,11 +11,14 @@ class Plane {
         this.vNormals = [];
         // this.vColors = [];
         this.texture = -1;
+        this.useShadowMap = true;
         this.uTextureUnitShader = -1;
         this.pickable = true;
         this.picked = false;
-
+        console.log('before')
         this.divideQuad(a, b, c, d, subdivs);
+        console.log('after')
+        console.log(this.vTexCoords);
 
         this.program = initShaders(gl, vshader_shadow_env, fshader_shadow_env);
         this.shadowProgram = initShaders(gl, vshader_shadow, fshader_shadow);
@@ -99,6 +102,8 @@ class Plane {
     }
 
     divideQuad(a, b, c, d, depth) {
+        console.log(a, b, c, d);
+        console.log("i am inside: " + depth);
         if (depth > 0) {
             var v1 = mult(0.5, add(a, b));
             var v2 = mult(0.5, add(b, c));
