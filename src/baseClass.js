@@ -175,7 +175,7 @@ class BaseClass {
         return this.minT;
     }
     onPick() {
-        this.picked = true;
+        this.picked = !this.picked;
     }
     testCollisionTriangle(v, e, f, g) {
         var ve = vec3(e[0], e[1], e[2]);

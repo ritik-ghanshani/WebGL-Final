@@ -86,7 +86,6 @@ window.onload = async function init() {
 	plane = new Plane();
 	plane.setSize(500, 500, 500);
 	objects.push(plane);
-	obj.push(plane.constructor.name);
 
 	cube = new Cube();
 	cube.setLocation(0, 5, 0);
@@ -148,9 +147,6 @@ function render() {
 			let sample = obj.sample();
 			let a;
 			switch (sample) {
-				case "Plane":
-					a = new Plane();
-					break;
 				case "Sphere":
 					a = new Sphere();
 					break;
@@ -161,20 +157,29 @@ function render() {
 					a = new Pyramid();
 					break;
 			}
-			a.setLocation(10, 0, -10);
+			a.setLocation(10, 6, -10);
 			a.setSize(Math.random() * 5, Math.random() * 5, Math.random() * 5);
 			objects.push(a);
 			console.log("Object Generated: ", a.constructor.name);
-			switchObj.picked = false;
+			// switchObj.picked = false;
 		}
 		theta += 0.01;
 		objects
 			.filter(o => o.constructor.name === "Sphere")
+			.filter(s => !s.picked)
 			.forEach(s => {
 				let a = sphere_size + 3 * Math.sin(theta);
 				s.setSize(a, a, a);
-			})
+				s.setYRotation(theta * 10 * 180 / Math.PI);
+				let [x, y, z] = s.location;
+				let nx = -Math.sin(theta * 10) + x + getRandomIntInclusive(-1, 1);
+				let ny = y;
+				let nz = Math.cos(theta * 10) + z + getRandomIntInclusive(-1, 1);
+				s.setLocation(nx, ny, nz);
+
+			});
 		ironMan.setLocation(Math.sin(theta * 10 * (0.5 + 0.5)), 0.05 * 4, Math.cos(theta * 10));
+		ironMan.setYRotation(theta * 10 * 180 / Math.PI);
 		if (selected_cam.constructor.name === "RoboCam") {
 			var cameraRad = ironMan.yrot * ((2 * Math.PI) / 360);
 			selected_cam.setPosition(
