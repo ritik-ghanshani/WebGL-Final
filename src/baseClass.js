@@ -37,21 +37,21 @@ class BaseClass {
     }
 
     initBuffers() {
-        this.vID = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vID);
+        this.vertexID = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexID);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(this.vPositions), gl.STATIC_DRAW);
 
         // this.cID = gl.createBuffer();
         // gl.bindBuffer(gl.ARRAY_BUFFER, this.cID);
         // gl.bufferData(gl.ARRAY_BUFFER, flatten(this.vColors), gl.STATIC_DRAW);
 
-        this.tCoordID = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.tCoordID);
+        this.textureCoordinateID = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.textureCoordinateID);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(this.vTexCoords), gl.STATIC_DRAW);
 
 
-        this.nID = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.nID);
+        this.normalID = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalID);
         gl.bufferData(gl.ARRAY_BUFFER, flatten(this.vNormals), gl.STATIC_DRAW);
 
         // Get the location of the attribute and uniform variables from the shader program.
@@ -105,10 +105,10 @@ class BaseClass {
 
         gl.useProgram(this.program);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.vID);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexID);
         gl.vertexAttribPointer(this.aPosition, 4, gl.FLOAT, false, 0, 0);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.tCoordID);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.textureCoordinateID);
         gl.vertexAttribPointer(this.aTextureCoord, 2, gl.FLOAT, false, 0, 0);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
@@ -117,7 +117,7 @@ class BaseClass {
         // gl.bindBuffer(gl.ARRAY_BUFFER, this.cID);
         // gl.vertexAttribPointer(this.aColor, 4, gl.FLOAT, false, 0, 0);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.nID);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.normalID);
         gl.vertexAttribPointer(this.aNormal, 3, gl.FLOAT, false, 0, 0);
 
         // set the uniform variables

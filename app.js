@@ -44,18 +44,9 @@ window.onload = async function init() {
 	Array.prototype.sample = function () {
 		return this[Math.floor(Math.random() * this.length)];
 	}
-	project_matrix = perspective(
-		90,
-		canvas.width / canvas.height,
-		0.1,
-		100
-	);
-	robo_projection_matrix = perspective(
-		90,
-		canvas.width / canvas.height,
-		0.1,
-		100
-	);
+	project_matrix = perspective(90, canvas.width / canvas.height, 0.1, 100);
+	robo_projection_matrix = perspective(90, canvas.width / canvas.height, 0.1, 100);
+
 	worldCam = new Camera(vec3(0, 0, 0), vec3(0, 1, 0), project_matrix);
 	roboCam = new RoboCam(vec3(0, 0, 0), vec3(0, 1, 0), robo_projection_matrix);
 	gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true });
@@ -71,12 +62,12 @@ window.onload = async function init() {
 
 	sun = new Light();
 	sun.setLocation(0, 100, 0);
-	sun.setAmbient(1, 1, 1);
+	sun.setAmbient(1.5, 1.5, 1.5);
 	sun.turnOn();
 	flash = new Light();
 	flash.setLocation(0, 15, 0);
 	flash.setDirection(0, -Math.sqrt(2) / 2, -Math.sqrt(2) / 2);
-	flash.setAmbient(0.3, 0.3, 0.3);
+	flash.setAmbient(3, 3, 3);
 	// flash.setSpecular(1, 1, 1);
 	// flash.setDiffuse(1.5, 0, 1);
 
@@ -252,8 +243,7 @@ function mousedownHandler(event) {
 	pcam[3] = 0;
 	var pworld = mult(inverse(worldCam.getCameraMatrix()), pcam);
 	var point = normalize(vec3(pworld[0], pworld[1], pworld[2]));
-	var min_t = null;
-	var min_object = null;
+	var min_t = null, min_object = null;
 	objects.forEach((o) => {
 		var t = o.testCollision(point);
 		if (t !== null && (min_t === null || t < min_t)) {
