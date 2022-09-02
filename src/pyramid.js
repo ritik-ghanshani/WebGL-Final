@@ -1,6 +1,6 @@
 class Pyramid extends BaseClass {
     constructor() {
-        super("./textures/white.jpg");
+        super("./textures/pyramid_bricks.jpg");
 
         this.numVertices = 24;
 

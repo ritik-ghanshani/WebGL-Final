@@ -1,7 +1,7 @@
 class Sphere extends BaseClass {
     constructor() {
         super("./textures/crystal.png");
-        let subdivs = 2;
+        let subdivs = 4;
         this.numVertices = 4 ** (subdivs + 1) * 3;
 
         this.vPositions = [];
