@@ -43,7 +43,7 @@ class Cube extends BaseClass{
 
         this.specular = vec4(0, 0, 0, 1);
         this.diffuse = vec4(1, 1, 1, 1);
-        this.ambient = vec4(0, 1, 0, 1);
+        this.ambient = vec4(0.01, 0.01, 0.01, 1);
         this.shininess = 10;
     }
 
