@@ -143,7 +143,7 @@ class BaseClass {
         gl.uniform1f(this.lightCutOffAngle2, flash.cutoffAngle);
         gl.uniform4fv(this.lightDirection2, flash.direction);
         gl.uniform1i(this.lightType2, flash.type);
-        gl.uniform1i(this.lightOn2, !flash.on);
+        gl.uniform1i(this.lightOn2, flash.on);
 
         gl.uniform4fv(this.matSpec, this.specular);
         gl.uniform4fv(this.matDiff, this.diffuse);
@@ -225,6 +225,12 @@ class BaseClass {
     }
     setSize(x, y, z) {
         this.sizeMatrix = scale(x, y, z);
+        this.updateModelMatrix();
+    }
+
+    setYRotation(deg) {
+        this.yrot = deg;
+        this.rotationYMatrix = rotateY(deg);
         this.updateModelMatrix();
     }
 }

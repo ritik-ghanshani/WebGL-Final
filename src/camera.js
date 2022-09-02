@@ -3,7 +3,7 @@ class Camera {
         this.camera_matrix = mat4();
         this.at = at;
         this.up = up;
-        this.eye = vec3(0, 1, 1);
+        this.eye = vec3(0, 5, 30);
         this.u = vec3(1, 0, 0);
         this.v = vec3(0, 1, 0);
         this.n = vec3(0, 0, 1);

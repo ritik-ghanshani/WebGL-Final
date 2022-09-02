@@ -51,7 +51,7 @@ window.onload = async function init() {
 
 	canvas = document.getElementById("gl-canvas");
 	project_matrix = perspective(
-		45,
+		90,
 		canvas.width / canvas.height,
 		0.1,
 		100
@@ -75,21 +75,6 @@ window.onload = async function init() {
 
 	sunAngle = 0;
 
-	sun = new Light();
-	sun.setLocation(10, 0, 0, 1);
-	sun.setAmbient(1, 1, 1);
-	flash = new Light();
-	flash.setLocation(0, 5, 5);
-	flash.setDirection(0, -Math.sqrt(2) / 2, -Math.sqrt(2) / 2);
-	flash.setAmbient(0.2, 0.2, 0.2);
-	flash.setSpecular(1, 1, 1);
-	flash.setDiffuse(1, 0, 1);
-	flash.turnOn();
-	flash.type = 1;
-
-	lights.push(sun);
-	lights.push(flash);
-
 	project_matrix = perspective(
 		45,
 		canvas.width / canvas.height,
@@ -97,19 +82,20 @@ window.onload = async function init() {
 		100
 	);
 
-	sunAngle = 0;
-
 	sun = new Light();
-	sun.setLocation(10, 0, 0);
-	sun.setAmbient(0.8, 0.8, 0.8);
-	sun.turnOn();
+	// sun.setLocation(10, 0, 0);
+	// sun.setAmbient(0.8, 0.8, 0.8);
+	// sun.turnOn();
 	flash = new Light();
 	flash.setLocation(0, 5, 5);
 	flash.setDirection(0, -Math.sqrt(2) / 2, -Math.sqrt(2) / 2);
-	flash.setAmbient(0.4, 0.4, 0.4);
+	flash.setAmbient(0.8, 0.8, 0.8);
 	flash.setSpecular(1, 1, 1);
 	flash.setDiffuse(1, 0, 1);
 	flash.turnOn();
+
+	lights.push(sun);
+	lights.push(flash);
 
 	plane = new Plane();
 	plane.setSize(500, 500, 500);
@@ -132,11 +118,11 @@ window.onload = async function init() {
 	objects.push(sphere);
 	obj.push(sphere.constructor.name);
 
-
 	switchObj2 = await loadOBJ("models/switch.obj")
 	switchObj = new Switch(switchObj2);
-	switchObj.setLocation(0.5 + 0.5 * 4, 0.05 * 4, 0 + 0.5 * 8.5);
+	switchObj.setLocation(15,0,0);
 	switchObj.setSize(0.008, 0.008, 0.008);
+	switchObj.setYRotation(180);
 	objects.push(switchObj);
 	obj.push(switchObj.constructor.name);
 

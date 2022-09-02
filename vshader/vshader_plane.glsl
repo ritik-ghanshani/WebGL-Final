@@ -17,7 +17,6 @@ out vec4 color;
 in vec4 aPosition;
 in vec2 aTextureCoord;
 
-
 in vec3 aNormal;
 
 uniform int lightType1;

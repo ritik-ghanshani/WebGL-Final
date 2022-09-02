@@ -1,6 +1,6 @@
 class Plane extends BaseClass {
     constructor() {
-        super("/textures/256x grass block.png");
+        super("/textures/cobble.jpg");
        
         this.vPositions = [];
         this.vTexCoords = [];
