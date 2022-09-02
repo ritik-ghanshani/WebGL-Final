@@ -16,14 +16,22 @@ class Pyramid extends BaseClass {
 
         var vertices = [
             vec3(-1, 0, 1),
-            vec3(1, 0, 1), 
-            vec3(-1, 0, -1), 
-            vec3(1, 0, -1), 
-            vec3(0, 1, 1), 
-            vec3(0, 1, -1) 
+            vec3(1, 0, 1),
+            vec3(-1, 0, -1),
+            vec3(1, 0, -1),
+            vec3(0, 1, 1),
+            vec3(0, 1, -1)
         ];
 
-        var indices = [0,1,3, 0,3,2, 3,1,4, 3,4,5, 0,2,4, 2,5,4, 4,0,1, 5,3,2];
+
+        var indices = [
+            0, 1, 3, 0, 3, 2,
+            3, 1, 4, 3, 4, 5,
+            0, 2, 4, 2, 5, 4,
+            4, 0, 1, 5, 3, 2
+        ];
+
+        var indices = [0, 1, 3, 0, 3, 2, 3, 1, 4, 3, 4, 5, 0, 2, 4, 2, 5, 4, 4, 0, 1, 5, 3, 2];
 
         for (var i = 0; i < indices.length; i += 3) {
             this.triangle(

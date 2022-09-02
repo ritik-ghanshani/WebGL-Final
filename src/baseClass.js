@@ -92,7 +92,7 @@ class BaseClass {
 
         this.specular = vec4(1, 1, 1, 1);
         this.diffuse = vec4(1, 1, 1, 1);
-        this.ambient = vec4(0.01, 0.01, 0.01, 1);
+        this.ambient = vec4(0.3, 0.3, 0.3, 1);
         this.shininess = 10;
         this.matSpec = gl.getUniformLocation(this.program, "matSpecular");
         this.matDiff = gl.getUniformLocation(this.program, "matDiffuse");

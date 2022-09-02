@@ -32,8 +32,6 @@ var selected_cam;
 
 var worldCam;
 
-// var roboCam;
-// lights.push(light1);
 var objects = [];
 var obj = [];
 const vshader = "./vshader/vshader_plane.glsl";
@@ -71,15 +69,8 @@ window.onload = async function init() {
 
 	sunAngle = 0;
 
-	project_matrix = perspective(
-		45,
-		canvas.width / canvas.height,
-		0.1,
-		100
-	);
-
 	sun = new Light();
-	sun.setLocation(0,100, 0);
+	sun.setLocation(0, 100, 0);
 	sun.setAmbient(1, 1, 1);
 	sun.turnOn();
 	flash = new Light();
@@ -123,16 +114,15 @@ window.onload = async function init() {
 
 	switchObj2 = await loadOBJ("models/switch.obj")
 	switchObj = new Switch(switchObj2);
-	switchObj.setLocation(15,0,0);
+	switchObj.setLocation(15, 0, 0);
 	switchObj.setSize(0.008, 0.008, 0.008);
 	switchObj.setYRotation(180);
 	objects.push(switchObj);
-	obj.push(switchObj.constructor.name);
 
 	robotObj = await loadOBJ("models/ironman.obj");
 	ironMan = new Robot(robotObj);
 	ironMan.setLocation(0.5 + 0.5, 0.05 * 4, 0);
-	ironMan.setSize(0.03, 0.03, 0.03);
+	ironMan.setSize(0.05, 0.05, 0.05);
 
 	var cameraRad = ironMan.yrot * ((2 * Math.PI) / 360);
 	roboCam.setPosition(
@@ -146,7 +136,6 @@ window.onload = async function init() {
 	selected_cam = worldCam;
 	objects.push(switchObj);
 	objects.push(ironMan);
-	obj.push(ironMan.constructor.name);
 
 	render();
 };
@@ -171,16 +160,11 @@ function render() {
 				case "Pyramid":
 					a = new Pyramid();
 					break;
-				case "Robot":
-					a = new Robot(robotObj);
-					break;
-				case "Switch":
-					a = new Switch(switchObj2);
-					break;
 			}
 			a.setLocation(10, 0, -10);
 			a.setSize(Math.random() * 5, Math.random() * 5, Math.random() * 5);
 			objects.push(a);
+			console.log("Object Generated: ", a.constructor.name);
 			switchObj.picked = false;
 		}
 		theta += 0.01;
@@ -190,29 +174,29 @@ function render() {
 				let a = sphere_size + 3 * Math.sin(theta);
 				s.setSize(a, a, a);
 			})
+		ironMan.setLocation(Math.sin(theta * 10 * (0.5 + 0.5)), 0.05 * 4, Math.cos(theta * 10));
 		if (selected_cam.constructor.name === "RoboCam") {
 			var cameraRad = ironMan.yrot * ((2 * Math.PI) / 360);
 			selected_cam.setPosition(
 				...add(
 					ironMan.getLocation(),
 					vec3(
-						-1 * Math.sin(cameraRad),
-						4.3,
+						1.1 + -1 * Math.sin(cameraRad),
+						4.4,
 						0.39 * Math.cos(cameraRad)
 					)
 				)
 			);
-			selected_cam.setAt(...add(ironMan.getLocation(), vec3(20, -12, 15)));
+			selected_cam.setAt(...add(ironMan.getLocation(), vec3(25, 0, 20)));
 			selected_cam.updateCamMatrix();
 		}
 		var cMat = selected_cam.getCameraMatrix();
 		var pMat = selected_cam.getProjectionMatrix();
 		objects.forEach((obj) => obj.draw(cMat, pMat));
-	}, 50);  //10fps
+	}, 25);
 }
 
 document.addEventListener('keydown', event => {
-	// console.log(event.code)
 	switch (event.code) {
 		case 'KeyQ':
 			selected_cam = (selected_cam === worldCam) ? roboCam : worldCam;
@@ -262,8 +246,6 @@ document.addEventListener('keydown', event => {
 })
 
 function mousedownHandler(event) {
-	console.log(event);
-	// Implementing picking
 	xclip = 2 * (event.clientX / canvas.width) - 1.0;
 	yclip = 1.0 - 2 * (event.clientY / canvas.height);
 	var pfront = vec4(xclip, yclip, -1, 1);

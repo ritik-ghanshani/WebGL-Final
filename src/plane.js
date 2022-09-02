@@ -6,7 +6,6 @@ class Plane extends BaseClass {
         this.vTexCoords = [];
         this.vNormals = [];
 
-        // this.vColors = [];
         let subdivs = 5;
         this.numVertices = 2 * 4 ** subdivs * 3;
         var a = vec3(-1, 0, 1);
@@ -31,16 +30,16 @@ class Plane extends BaseClass {
             this.divideQuad(v2, c, v3, v5, depth - 1);
             this.divideQuad(v3, d, v4, v5, depth - 1);
         } else {
-            //Triangle #1
+
             this.triangle(a, b, c);
-            this.vTexCoords.push(vec2(0.0, 0.0)); //first vertex
-            this.vTexCoords.push(vec2(1.0, 0.0)); //second vertex
-            this.vTexCoords.push(vec2(1.0, 1.0)); //third vertex
-            //Triangle #2
+            this.vTexCoords.push(vec2(0.0, 0.0));
+            this.vTexCoords.push(vec2(1.0, 0.0));
+            this.vTexCoords.push(vec2(1.0, 1.0));
+
             this.triangle(c, d, a);
-            this.vTexCoords.push(vec2(0.0, 0.0)); //first vertex
-            this.vTexCoords.push(vec2(1.0, 0.0)); //second vertex
-            this.vTexCoords.push(vec2(1.0, 1.0)); //third vertex
+            this.vTexCoords.push(vec2(0.0, 0.0));
+            this.vTexCoords.push(vec2(1.0, 0.0));
+            this.vTexCoords.push(vec2(1.0, 1.0));
         }
     }
 
@@ -48,12 +47,12 @@ class Plane extends BaseClass {
         var N = normalize(cross(subtract(b, a), subtract(c, a)));
         this.vPositions.push(vec4(...a, 1.0));
         this.vNormals.push(N);
-        // this.vColors.push(BLACK);
+
         this.vPositions.push(vec4(...b, 1.0));
         this.vNormals.push(N);
-        // this.vColors.push(RED);
+
         this.vPositions.push(vec4(...c, 1.0));
         this.vNormals.push(N);
-        // this.vColors.push(BLACK);
+
     }
 }
