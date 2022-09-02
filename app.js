@@ -181,24 +181,17 @@ function render() {
 		ironMan.setLocation(Math.sin(theta * 10 * (0.5 + 0.5)), 0.05 * 4, Math.cos(theta * 10));
 		ironMan.setYRotation(theta * 10 * 180 / Math.PI);
 		if (selected_cam.constructor.name === "RoboCam") {
-			var cameraRad = ironMan.yrot * ((2 * Math.PI) / 360);
-			selected_cam.setPosition(
-				...add(
-					ironMan.getLocation(),
-					vec3(
-						1.1 + -1 * Math.sin(cameraRad),
-						4.4,
-						0.39 * Math.cos(cameraRad)
-					)
-				)
-			);
-			selected_cam.setAt(...add(ironMan.getLocation(), vec3(25, 0, 20)));
+			var cameraRad = ironMan.yrot * Math.PI / 180;
+			let ironman_eye = add(ironMan.getLocation(), vec3(Math.sin(theta * 10 * (0.5 + 0.5)), 8, Math.cos(cameraRad)));
+			selected_cam.setPosition(...ironman_eye);
+			let n = length(vec3(1, 1, 1000));
+			selected_cam.setAt(...add(ironman_eye, vec3(n * Math.sin(cameraRad), 0, 1000 * Math.cos(cameraRad))));
 			selected_cam.updateCamMatrix();
 		}
 		var cMat = selected_cam.getCameraMatrix();
 		var pMat = selected_cam.getProjectionMatrix();
 		objects.forEach((obj) => obj.draw(cMat, pMat));
-	}, 25);
+	}, 50);
 }
 
 document.addEventListener('keydown', event => {
