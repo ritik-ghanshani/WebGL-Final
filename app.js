@@ -32,8 +32,6 @@ var selected_cam;
 
 var worldCam;
 
-// var roboCam;
-// lights.push(light1);
 var objects = [];
 var obj = [];
 const vshader = "./vshader/vshader_plane.glsl";
@@ -83,9 +81,9 @@ window.onload = async function init() {
 	);
 
 	sun = new Light();
-	// sun.setLocation(10, 0, 0);
-	// sun.setAmbient(0.8, 0.8, 0.8);
-	// sun.turnOn();
+	sun.setLocation(10, 0, 0);
+	sun.setAmbient(0.8, 0.8, 0.8);
+	sun.turnOn();
 	flash = new Light();
 	flash.setLocation(0, 5, 5);
 	flash.setDirection(0, -Math.sqrt(2) / 2, -Math.sqrt(2) / 2);
@@ -129,7 +127,7 @@ window.onload = async function init() {
 	robotObj = await loadOBJ("models/ironman.obj");
 	ironMan = new Robot(robotObj);
 	ironMan.setLocation(0.5 + 0.5, 0.05 * 4, 0);
-	ironMan.setSize(0.03, 0.03, 0.03);
+	ironMan.setSize(0.05, 0.05, 0.05);
 
 	var cameraRad = ironMan.yrot * ((2 * Math.PI) / 360);
 	roboCam.setPosition(
@@ -187,29 +185,29 @@ function render() {
 				let a = sphere_size + 3 * Math.sin(theta);
 				s.setSize(a, a, a);
 			})
+		ironMan.setLocation(Math.sin(theta * 10 * (0.5 + 0.5)), 0.05 * 4, Math.cos(theta * 10));
 		if (selected_cam.constructor.name === "RoboCam") {
 			var cameraRad = ironMan.yrot * ((2 * Math.PI) / 360);
 			selected_cam.setPosition(
 				...add(
 					ironMan.getLocation(),
 					vec3(
-						-1 * Math.sin(cameraRad),
-						4.3,
+						1.1 + -1 * Math.sin(cameraRad),
+						4.4,
 						0.39 * Math.cos(cameraRad)
 					)
 				)
 			);
-			selected_cam.setAt(...add(ironMan.getLocation(), vec3(20, -12, 15)));
+			selected_cam.setAt(...add(ironMan.getLocation(), vec3(25, 0, 20)));
 			selected_cam.updateCamMatrix();
 		}
 		var cMat = selected_cam.getCameraMatrix();
 		var pMat = selected_cam.getProjectionMatrix();
 		objects.forEach((obj) => obj.draw(cMat, pMat));
-	}, 50);  //10fps
+	}, 25);
 }
 
 document.addEventListener('keydown', event => {
-	// console.log(event.code)
 	switch (event.code) {
 		case 'KeyQ':
 			selected_cam = (selected_cam === worldCam) ? roboCam : worldCam;
@@ -259,7 +257,6 @@ document.addEventListener('keydown', event => {
 })
 
 function mousedownHandler(event) {
-	// Implementing picking
 	xclip = 2 * (event.clientX / canvas.width) - 1.0;
 	yclip = 1.0 - 2 * (event.clientY / canvas.height);
 	var pfront = vec4(xclip, yclip, -1, 1);
