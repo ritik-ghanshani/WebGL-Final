@@ -39,15 +39,11 @@ const fshader = "./fshader/fshader_plane.glsl";
 
 window.onload = async function init() {
 	canvas = document.getElementById("gl-canvas");
-	canvas.addEventListener("mousedown", mousedownHandler);
+	window.addEventListener("mousedown", mousedownHandler);
 
 	Array.prototype.sample = function () {
 		return this[Math.floor(Math.random() * this.length)];
 	}
-
-	window.addEventListener("mousedown", mousedownHandler);
-
-	canvas = document.getElementById("gl-canvas");
 	project_matrix = perspective(
 		90,
 		canvas.width / canvas.height,
@@ -74,16 +70,15 @@ window.onload = async function init() {
 	sunAngle = 0;
 
 	sun = new Light();
-	sun.setLocation(10, 0, 0);
-	sun.setAmbient(0.8, 0.8, 0.8);
+	sun.setLocation(0,100, 0);
+	sun.setAmbient(1, 1, 1);
 	sun.turnOn();
 	flash = new Light();
-	flash.setLocation(0, 5, 5);
+	flash.setLocation(0, 15, 0);
 	flash.setDirection(0, -Math.sqrt(2) / 2, -Math.sqrt(2) / 2);
-	flash.setAmbient(0.8, 0.8, 0.8);
-	flash.setSpecular(1, 1, 1);
-	flash.setDiffuse(1, 0, 1);
-	flash.turnOn();
+	flash.setAmbient(0.3, 0.3, 0.3);
+	// flash.setSpecular(1, 1, 1);
+	// flash.setDiffuse(1.5, 0, 1);
 
 	lights.push(sun);
 	lights.push(flash);
@@ -105,8 +100,16 @@ window.onload = async function init() {
 	objects.push(pyramid);
 	obj.push(pyramid.constructor.name);
 
-	sphere = new Sphere();
-	objects.push(sphere);
+	for (let j = -1; j < 2; j++) {
+		for (let i = -1; i < 2; i++) {
+			let x = j * 5;
+			let y = 3;
+			let z = i * 5;
+			sphere = new Sphere();
+			sphere.setLocation(x, y, z)
+			objects.push(sphere);
+		}
+	}
 	obj.push(sphere.constructor.name);
 
 	switchObj2 = await loadOBJ("models/switch.obj")
@@ -166,8 +169,8 @@ function render() {
 					a = new Switch(switchObj2);
 					break;
 			}
-			a.setLocation(getRandomIntInclusive(-20, 20), 0, getRandomIntInclusive(-20, 20));
-			a.setSize(Math.random(), Math.random(), Math.random());
+			a.setLocation(10, 0, -10);
+			a.setSize(Math.random() * 5, Math.random() * 5, Math.random() * 5);
 			objects.push(a);
 			switchObj.picked = false;
 		}
@@ -269,6 +272,7 @@ function mousedownHandler(event) {
 	});
 	if (min_object !== null) {
 		min_object.onPick();
+		console.log(min_object.constructor.name);
 	}
 }
 

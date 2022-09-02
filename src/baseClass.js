@@ -90,9 +90,9 @@ class BaseClass {
         this.lightType1 = gl.getUniformLocation(this.program, "lightType1");
         this.lightType2 = gl.getUniformLocation(this.program, "lightType2");
 
-        this.specular = vec4(0, 0, 0, 1);
+        this.specular = vec4(1, 1, 1, 1);
         this.diffuse = vec4(1, 1, 1, 1);
-        this.ambient = vec4(0, 1, 0, 1);
+        this.ambient = vec4(0.01, 0.01, 0.01, 1);
         this.shininess = 10;
         this.matSpec = gl.getUniformLocation(this.program, "matSpecular");
         this.matDiff = gl.getUniformLocation(this.program, "matDiffuse");
@@ -133,7 +133,7 @@ class BaseClass {
         gl.uniform1f(this.lightAlpha1, sun.alpha);
         gl.uniform1f(this.lightCutOffAngle1, sun.cutoffAngle);
         gl.uniform1i(this.lightType1, sun.type);
-        gl.uniform1i(this.lightOn1, !sun.on);
+        gl.uniform1i(this.lightOn1, sun.on);
 
         gl.uniform4fv(this.lightPosition2, flash.position);
         gl.uniform4fv(this.lightDiffuse2, flash.diffuse);
