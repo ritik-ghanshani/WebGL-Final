@@ -1,13 +1,13 @@
 class Plane extends BaseClass {
     constructor() {
         super("/textures/wood.png");
-       
+
         this.vPositions = [];
         this.vTexCoords = [];
         this.vNormals = [];
 
         // this.vColors = [];
-        let subdivs = 1;
+        let subdivs = 5;
         this.numVertices = 2 * 4 ** subdivs * 3;
         var a = vec3(-1, 0, 1);
         var b = vec3(1, 0, 1);
@@ -16,7 +16,7 @@ class Plane extends BaseClass {
 
         this.divideQuad(a, b, c, d, subdivs);
         this.initBuffers();
-        
+
     }
 
     divideQuad(a, b, c, d, depth) {
