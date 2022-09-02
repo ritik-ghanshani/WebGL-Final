@@ -70,7 +70,7 @@ window.onload = async function init() {
 	sunAngle = 0;
 
 	sun = new Light();
-	sun.setLocation(0,100, 0);
+	sun.setLocation(0, 100, 0);
 	sun.setAmbient(1, 1, 1);
 	sun.turnOn();
 	flash = new Light();
@@ -118,7 +118,6 @@ window.onload = async function init() {
 	switchObj.setSize(0.008, 0.008, 0.008);
 	switchObj.setYRotation(180);
 	objects.push(switchObj);
-	obj.push(switchObj.constructor.name);
 
 	robotObj = await loadOBJ("models/ironman.obj");
 	ironMan = new Robot(robotObj);
@@ -137,7 +136,6 @@ window.onload = async function init() {
 	selected_cam = worldCam;
 	objects.push(switchObj);
 	objects.push(ironMan);
-	obj.push(ironMan.constructor.name);
 
 	render();
 };
@@ -162,16 +160,11 @@ function render() {
 				case "Pyramid":
 					a = new Pyramid();
 					break;
-				case "Robot":
-					a = new Robot(robotObj);
-					break;
-				case "Switch":
-					a = new Switch(switchObj2);
-					break;
 			}
 			a.setLocation(10, 0, -10);
 			a.setSize(Math.random() * 5, Math.random() * 5, Math.random() * 5);
 			objects.push(a);
+			console.log("Object Generated: ", a.constructor.name);
 			switchObj.picked = false;
 		}
 		theta += 0.01;
