@@ -98,7 +98,7 @@ window.onload = async function init() {
 	lights.push(flash);
 
 	plane = new Plane();
-	plane.setSize(500, 500, 500);
+	plane.setSize(30, 30, 30);
 	objects.push(plane);
 	obj.push(plane.constructor.name);
 
@@ -121,7 +121,7 @@ window.onload = async function init() {
 	switchObj2 = await loadOBJ("models/switch.obj")
 	switchObj = new Switch(switchObj2);
 	switchObj.setLocation(15,0,0);
-	switchObj.setSize(0.008, 0.008, 0.008);
+	switchObj.setSize(0.01, 0.01, 0.01);
 	switchObj.setYRotation(180);
 	objects.push(switchObj);
 	obj.push(switchObj.constructor.name);
@@ -175,8 +175,12 @@ function render() {
 					a = new Switch(switchObj2);
 					break;
 			}
-			a.setLocation(getRandomIntInclusive(-20, 20), 0, getRandomIntInclusive(-20, 20));
-			a.setSize(Math.random(), Math.random(), Math.random());
+			a.setLocation(10, 0, 10);
+			one = Math.random() * 5;
+			two = Math.random() * 5;
+			three = Math.random() * 5;
+			console.log(one, two, three);
+			a.setSize(one, two, three);
 			objects.push(a);
 			switchObj.picked = false;
 		}
@@ -273,6 +277,7 @@ function mousedownHandler(event) {
 	objects.forEach((o) => {
 		var t = o.testCollision(point);
 		if (t !== null && (min_t === null || t < min_t)) {
+			console.log(o);
 			min_t = t;
 			min_object = o;
 		}
