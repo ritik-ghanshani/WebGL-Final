@@ -41,12 +41,15 @@ const fshader = "./fshader/fshader_plane.glsl";
 
 window.onload = async function init() {
 	canvas = document.getElementById("gl-canvas");
-	window.addEventListener("mousedown", mousedownHandler);
+	canvas.addEventListener("mousedown", mousedownHandler);
 
 	Array.prototype.sample = function () {
 		return this[Math.floor(Math.random() * this.length)];
 	}
 
+	window.addEventListener("mousedown", mousedownHandler);
+
+	canvas = document.getElementById("gl-canvas");
 	project_matrix = perspective(
 		90,
 		canvas.width / canvas.height,
@@ -95,7 +98,7 @@ window.onload = async function init() {
 	lights.push(flash);
 
 	plane = new Plane();
-	plane.setSize(30, 30, 30);
+	plane.setSize(500, 500, 500);
 	objects.push(plane);
 	obj.push(plane.constructor.name);
 
@@ -111,23 +114,14 @@ window.onload = async function init() {
 	objects.push(pyramid);
 	obj.push(pyramid.constructor.name);
 
-	for (let j = -1; j < 2; j++) {
-		for (let i = -1; i < 2; i++) {
-			let x = j * 5;
-			let y = 3;
-			let z = i * 5;
-			sphere = new Sphere();
-			sphere.setLocation(x, y, z)
-			objects.push(sphere);
-		}
-	}
+	sphere = new Sphere();
+	objects.push(sphere);
 	obj.push(sphere.constructor.name);
 
 	switchObj2 = await loadOBJ("models/switch.obj")
 	switchObj = new Switch(switchObj2);
-
 	switchObj.setLocation(15,0,0);
-	switchObj.setSize(0.01, 0.01, 0.01);
+	switchObj.setSize(0.008, 0.008, 0.008);
 	switchObj.setYRotation(180);
 	objects.push(switchObj);
 	obj.push(switchObj.constructor.name);
@@ -180,15 +174,10 @@ function render() {
 				case "Switch":
 					a = new Switch(switchObj2);
 					break;
-			
-			a.setLocation(10, 0, 10);
-			one = Math.random() * 5;
-			two = Math.random() * 5;
-			three = Math.random() * 5;
-			console.log(one, two, three);
-			a.setSize(one, two, three);
+			}
+			a.setLocation(getRandomIntInclusive(-20, 20), 0, getRandomIntInclusive(-20, 20));
+			a.setSize(Math.random(), Math.random(), Math.random());
 			objects.push(a);
-			console.log("Object Generated: ", a.constructor.name);
 			switchObj.picked = false;
 		}
 		theta += 0.01;
@@ -284,13 +273,11 @@ function mousedownHandler(event) {
 	objects.forEach((o) => {
 		var t = o.testCollision(point);
 		if (t !== null && (min_t === null || t < min_t)) {
-			console.log(o);
 			min_t = t;
 			min_object = o;
 		}
 	});
 	if (min_object !== null) {
-		console.log("Picked: ", min_object.constructor.name)
 		min_object.onPick();
 	}
 }
