@@ -41,15 +41,12 @@ const fshader = "./fshader/fshader_plane.glsl";
 
 window.onload = async function init() {
 	canvas = document.getElementById("gl-canvas");
-	canvas.addEventListener("mousedown", mousedownHandler);
+	window.addEventListener("mousedown", mousedownHandler);
 
 	Array.prototype.sample = function () {
 		return this[Math.floor(Math.random() * this.length)];
 	}
 
-	window.addEventListener("mousedown", mousedownHandler);
-
-	canvas = document.getElementById("gl-canvas");
 	project_matrix = perspective(
 		90,
 		canvas.width / canvas.height,
@@ -114,13 +111,21 @@ window.onload = async function init() {
 	objects.push(pyramid);
 	obj.push(pyramid.constructor.name);
 
-	sphere = new Sphere();
-	objects.push(sphere);
+	for (let j = -1; j < 2; j++) {
+		for (let i = -1; i < 2; i++) {
+			let x = j * 5;
+			let y = 3;
+			let z = i * 5;
+			sphere = new Sphere();
+			sphere.setLocation(x, y, z)
+			objects.push(sphere);
+		}
+	}
 	obj.push(sphere.constructor.name);
 
 	switchObj2 = await loadOBJ("models/switch.obj")
 	switchObj = new Switch(switchObj2);
-	switchObj.setLocation(15,0,0);
+	switchObj.setLocation(15, 0, 0);
 	switchObj.setSize(0.008, 0.008, 0.008);
 	switchObj.setYRotation(180);
 	objects.push(switchObj);
@@ -175,9 +180,10 @@ function render() {
 					a = new Switch(switchObj2);
 					break;
 			}
-			a.setLocation(getRandomIntInclusive(-20, 20), 0, getRandomIntInclusive(-20, 20));
-			a.setSize(Math.random(), Math.random(), Math.random());
+			a.setLocation(getRandomIntInclusive(-5, 5), 0, getRandomIntInclusive(-5, 5));
+			a.setSize(1, 1, 1);
 			objects.push(a);
+			console.log("Object Generated: ", a.constructor.name);
 			switchObj.picked = false;
 		}
 		theta += 0.01;
@@ -278,6 +284,7 @@ function mousedownHandler(event) {
 		}
 	});
 	if (min_object !== null) {
+		console.log("Picked: ", min_object.constructor.name)
 		min_object.onPick();
 	}
 }
