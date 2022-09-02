@@ -73,13 +73,6 @@ window.onload = async function init() {
 
 	sunAngle = 0;
 
-	project_matrix = perspective(
-		45,
-		canvas.width / canvas.height,
-		0.1,
-		100
-	);
-
 	sun = new Light();
 	sun.setLocation(10, 0, 0);
 	sun.setAmbient(0.8, 0.8, 0.8);
@@ -118,7 +111,7 @@ window.onload = async function init() {
 
 	switchObj2 = await loadOBJ("models/switch.obj")
 	switchObj = new Switch(switchObj2);
-	switchObj.setLocation(15,0,0);
+	switchObj.setLocation(15, 0, 0);
 	switchObj.setSize(0.008, 0.008, 0.008);
 	switchObj.setYRotation(180);
 	objects.push(switchObj);
