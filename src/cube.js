@@ -1,6 +1,6 @@
-class Cube extends BaseClass{
+class Cube extends BaseClass {
     constructor() {
-        super("/textures/crate_texture.jpg");
+        super("/textures/pyramid_bricks.jpg");
 
         var vertices = [
             vec3(-1, -1, 1),
@@ -43,7 +43,7 @@ class Cube extends BaseClass{
 
         this.specular = vec4(0, 0, 0, 1);
         this.diffuse = vec4(1, 1, 1, 1);
-        this.ambient = vec4(0.01, 0.01, 0.01, 1);
+        this.ambient = vec4(0.3, 0.3, 0.3, 1);
         this.shininess = 10;
     }
 

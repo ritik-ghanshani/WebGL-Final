@@ -88,14 +88,14 @@ window.onload = async function init() {
 	objects.push(plane);
 
 	cube = new Cube();
-	cube.setLocation(0, 5, 0);
-	cube.setSize(0.4, 0.4, 0.4);
+	cube.setLocation(-10, 0, 0);
+	cube.setSize(5, 5, 5);
 	objects.push(cube);
 	obj.push(cube.constructor.name);
 
 	pyramid = new Pyramid();
 	pyramid.setSize(5, 5, 5);
-	pyramid.setLocation(-10, 0, 0);
+	pyramid.setLocation(-10, 5, 0);
 	objects.push(pyramid);
 	obj.push(pyramid.constructor.name);
 
